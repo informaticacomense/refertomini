@@ -14,8 +14,9 @@ export async function POST(req: Request) {
 
     // 🔍 Controlla se l'utente esiste già
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing)
+    if (existing) {
       return NextResponse.json({ error: "Email già registrata" }, { status: 400 });
+    }
 
     // 🔒 Cripta la password
     const hashed = await hashPassword(password);
@@ -29,8 +30,8 @@ export async function POST(req: Request) {
         email,
         password: hashed,
         verificationToken,
-        teamName: "Informatica Comense", // campo obbligatorio
-        ...(committeeId ? { committeeId } : {}), // opzionale
+        teamName: "Informatica Comense", // campo obbligatorio nello schema
+        ...(committeeId ? { committeeId } : {}), // solo se presente
       },
     });
 
