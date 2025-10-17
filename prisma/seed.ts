@@ -20,6 +20,7 @@ async function main() {
               password: await bcrypt.hash("Mujanovic1!", 12),
               firstName: "Super",
               lastName: "Admin",
+              teamName: "Informatica Comense",
               isAdmin: true,
               isSuperAdmin: true,
               emailVerified: true,
