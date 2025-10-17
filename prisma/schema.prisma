@@ -1,0 +1,108 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+enum GameStatus { IN_PROGRAMMA CARICATA OMOLOGATA }
+
+model Season {
+  id         String     @id @default(cuid())
+  name       String     @unique
+  startDate  DateTime
+  endDate    DateTime
+  committees Committee[]
+  createdAt  DateTime   @default(now())
+}
+
+model Committee {
+  id        String    @id @default(cuid())
+  name      String
+  logoUrl   String?
+  seasonId  String
+  season    Season    @relation(fields: [seasonId], references: [id])
+  categories Category[]
+  companies  Company[]
+  users      User[]
+  createdAt  DateTime  @default(now())
+  @@unique([seasonId, name])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  committeeId String
+  committee   Committee @relation(fields: [committeeId], references: [id])
+  games       Game[]
+  createdAt   DateTime  @default(now())
+  @@unique([committeeId, name])
+}
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  committeeId String
+  committee   Committee @relation(fields: [committeeId], references: [id])
+  users       User[]
+  gamesA      Game[]    @relation("TeamA")
+  gamesB      Game[]    @relation("TeamB")
+  createdAt   DateTime  @default(now())
+  @@unique([committeeId, name])
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  firstName      String
+  lastName       String
+  teamName       String
+  isAdmin        Boolean   @default(false)
+  isSuperAdmin   Boolean   @default(false)
+  emailVerified  Boolean   @default(false)
+  verificationToken String?
+  resetToken     String?
+  resetTokenExp  DateTime?
+
+  companyId    String?
+  company      Company?   @relation(fields: [companyId], references: [id])
+
+  committeeId  String?
+  committee    Committee? @relation(fields: [committeeId], references: [id])
+
+  createdAt    DateTime   @default(now())
+  games        Game[]     @relation("GameOwners")
+}
+
+model Game {
+  id           String   @id @default(cuid())
+  number       String
+  dayName      String
+  date         DateTime
+  timeStr      String
+  venue        String
+  status       GameStatus @default(IN_PROGRAMMA)
+  result       String?
+  notes        String?
+
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id])
+  teamAId      String?
+  teamA        Company?  @relation("TeamA", fields: [teamAId], references: [id])
+  teamBId      String?
+  teamB        Company?  @relation("TeamB", fields: [teamBId], references: [id])
+
+  owners       User[]    @relation("GameOwners")
+  report       Report?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  @@unique([categoryId, number])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  gameId       String   @unique
+  game         Game     @relation(fields: [gameId], references: [id])
+  fileKey      String
+  mimeType     String
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+}
