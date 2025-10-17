@@ -1,65 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum GameStatus {
-  IN_PROGRAMMA
-  CARICATA
-  OMOLOGATA
-}
-
-model Season {
-  id         String     @id @default(cuid())
-  name       String     @unique
-  startDate  DateTime
-  endDate    DateTime
-  committees Committee[]
-  createdAt  DateTime   @default(now())
-}
-
-model Committee {
-  id         String     @id @default(cuid())
-  name       String
-  logoUrl    String?
-  seasonId   String
-  season     Season     @relation(fields: [seasonId], references: [id])
-  categories Category[]
-  companies  Company[]
-  users      User[]
-  createdAt  DateTime   @default(now())
-
-  @@unique([seasonId, name])
-}
-
-model Category {
-  id          String     @id @default(cuid())
-  name        String
-  committeeId String
-  committee   Committee  @relation(fields: [committeeId], references: [id])
-  games       Game[]
-  createdAt   DateTime   @default(now())
-
-  @@unique([committeeId, name])
-}
-
-model Company {
-  id          String     @id @default(cuid())
-  name        String
-  committeeId String
-  committee   Committee  @relation(fields: [committeeId], references: [id])
-  users       User[]
-  gamesA      Game[]     @relation("TeamA")
-  gamesB      Game[]     @relation("TeamB")
-  createdAt   DateTime   @default(now())
-
-  @@unique([committeeId, name])
-}
-
 model User {
   id             String    @id @default(cuid())
   email          String    @unique
@@ -81,33 +19,9 @@ model User {
   committee    Committee? @relation(fields: [committeeId], references: [id])
 
   createdAt    DateTime   @default(now())
+
   games        Game[]     @relation("GameOwners")
-}
-
-model Game {
-  id           String   @id @default(cuid())
-  number       String
-  dayName      String
-  date         DateTime
-  timeStr      String
-  venue        String
-  status       GameStatus @default(IN_PROGRAMMA)
-  result       String?
-  notes        String?
-
-  categoryId   String
-  category     Category  @relation(fields: [categoryId], references: [id])
-  teamAId      String?
-  teamA        Company?  @relation("TeamA", fields: [teamAId], references: [id])
-  teamBId      String?
-  teamB        Company?  @relation("TeamB", fields: [teamBId], references: [id])
-
-  owners       User[]    @relation("GameOwners")
-  report       Report?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  @@unique([categoryId, number])
+  reports      Report[]   @relation("UserReports")   // 👈 relazione inversa aggiunta
 }
 
 model Report {
@@ -117,6 +31,6 @@ model Report {
   fileKey      String
   mimeType     String
   uploadedById String
-  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  uploadedBy   User     @relation("UserReports", fields: [uploadedById], references: [id]) // 👈 collegata qui
   createdAt    DateTime @default(now())
 }
