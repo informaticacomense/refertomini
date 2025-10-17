@@ -1,7 +1,17 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum GameStatus { IN_PROGRAMMA CARICATA OMOLOGATA }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameStatus {
+  IN_PROGRAMMA
+  CARICATA
+  OMOLOGATA
+}
 
 model Season {
   id         String     @id @default(cuid())
@@ -13,37 +23,40 @@ model Season {
 }
 
 model Committee {
-  id        String    @id @default(cuid())
-  name      String
-  logoUrl   String?
-  seasonId  String
-  season    Season    @relation(fields: [seasonId], references: [id])
+  id         String     @id @default(cuid())
+  name       String
+  logoUrl    String?
+  seasonId   String
+  season     Season     @relation(fields: [seasonId], references: [id])
   categories Category[]
   companies  Company[]
   users      User[]
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime   @default(now())
+
   @@unique([seasonId, name])
 }
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   committeeId String
-  committee   Committee @relation(fields: [committeeId], references: [id])
+  committee   Committee  @relation(fields: [committeeId], references: [id])
   games       Game[]
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime   @default(now())
+
   @@unique([committeeId, name])
 }
 
 model Company {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   committeeId String
-  committee   Committee @relation(fields: [committeeId], references: [id])
+  committee   Committee  @relation(fields: [committeeId], references: [id])
   users       User[]
-  gamesA      Game[]    @relation("TeamA")
-  gamesB      Game[]    @relation("TeamB")
-  createdAt   DateTime  @default(now())
+  gamesA      Game[]     @relation("TeamA")
+  gamesB      Game[]     @relation("TeamB")
+  createdAt   DateTime   @default(now())
+
   @@unique([committeeId, name])
 }
 
@@ -93,6 +106,7 @@ model Game {
   report       Report?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
   @@unique([categoryId, number])
 }
 
