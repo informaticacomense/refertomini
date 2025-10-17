@@ -1,3 +1,85 @@
+// ======================================================
+// REFERTIMINI – powered by Informatica Comense
+// Database schema: referti-minibasket
+// ======================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameStatus {
+  IN_PROGRAMMA
+  CARICATA
+  OMOLOGATA
+}
+
+// ======================================================
+// MODELLO STAGIONE SPORTIVA
+// ======================================================
+model Season {
+  id         String     @id @default(cuid())
+  name       String     @unique                     // es: "2024/2025"
+  startDate  DateTime
+  endDate    DateTime
+  committees Committee[]
+  createdAt  DateTime   @default(now())
+}
+
+// ======================================================
+// MODELLO COMITATO (es. FIP ComoLecco)
+// ======================================================
+model Committee {
+  id         String     @id @default(cuid())
+  name       String
+  logoUrl    String?
+  seasonId   String
+  season     Season     @relation(fields: [seasonId], references: [id])
+  categories Category[]
+  companies  Company[]
+  users      User[]
+  createdAt  DateTime   @default(now())
+
+  @@unique([seasonId, name])
+}
+
+// ======================================================
+// MODELLO CATEGORIA (es. Scoiattoli, Aquilotti…)
+// ======================================================
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  committeeId String
+  committee   Committee  @relation(fields: [committeeId], references: [id])
+  games       Game[]
+  createdAt   DateTime   @default(now())
+
+  @@unique([committeeId, name])
+}
+
+// ======================================================
+// MODELLO SOCIETÀ / SQUADRA
+// ======================================================
+model Company {
+  id          String     @id @default(cuid())
+  name        String
+  committeeId String
+  committee   Committee  @relation(fields: [committeeId], references: [id])
+  users       User[]
+  gamesA      Game[]     @relation("TeamA")
+  gamesB      Game[]     @relation("TeamB")
+  createdAt   DateTime   @default(now())
+
+  @@unique([committeeId, name])
+}
+
+// ======================================================
+// MODELLO UTENTE
+// ======================================================
 model User {
   id             String    @id @default(cuid())
   email          String    @unique
@@ -5,8 +87,8 @@ model User {
   firstName      String
   lastName       String
   teamName       String
-  isAdmin        Boolean   @default(false)
-  isSuperAdmin   Boolean   @default(false)
+  isAdmin        Boolean   @default(false)          // admin del comitato
+  isSuperAdmin   Boolean   @default(false)          // super admin globale
   emailVerified  Boolean   @default(false)
   verificationToken String?
   resetToken     String?
@@ -20,17 +102,49 @@ model User {
 
   createdAt    DateTime   @default(now())
 
-  games        Game[]     @relation("GameOwners")
-  reports      Report[]   @relation("UserReports")   // 👈 relazione inversa aggiunta
+  games        Game[]     @relation("GameOwners")   // gare collegate
+  reports      Report[]   @relation("UserReports")  // referti caricati
 }
 
+// ======================================================
+// MODELLO GARA
+// ======================================================
+model Game {
+  id           String   @id @default(cuid())
+  number       String                               // Numero gara (es. "MB1234")
+  dayName      String                               // Giorno della settimana
+  date         DateTime
+  timeStr      String                               // Ora della partita
+  venue        String                               // Campo di gioco
+  status       GameStatus @default(IN_PROGRAMMA)
+  result       String?
+  notes        String?
+
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id])
+  teamAId      String?
+  teamA        Company?  @relation("TeamA", fields: [teamAId], references: [id])
+  teamBId      String?
+  teamB        Company?  @relation("TeamB", fields: [teamBId], references: [id])
+
+  owners       User[]    @relation("GameOwners")    // utenti che possono modificarla
+  report       Report?                             // referto PDF
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([categoryId, number])
+}
+
+// ======================================================
+// MODELLO REFERTO PDF
+// ======================================================
 model Report {
   id           String   @id @default(cuid())
   gameId       String   @unique
   game         Game     @relation(fields: [gameId], references: [id])
-  fileKey      String
-  mimeType     String
+  fileKey      String                               // percorso file su disco/S3
+  mimeType     String                               // sempre application/pdf
   uploadedById String
-  uploadedBy   User     @relation("UserReports", fields: [uploadedById], references: [id]) // 👈 collegata qui
+  uploadedBy   User     @relation("UserReports", fields: [uploadedById], references: [id])
   createdAt    DateTime @default(now())
 }
