@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: refertimini
+    env: node
+    plan: starter
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node node_modules/.bin/next start -p 3000
+    envVars:
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: DISK_BASE_PATH
+        value: /data/uploads
+    disk:
+      name: uploads
+      mountPath: /data
+      sizeGB: 5
+    healthCheckPath: /api/health
+
+  - type: cron
+    name: refertimini-solleciti
+    schedule: "0 8 * * *"
+    env: node
+    buildCommand: ""
+    startCommand: "curl -sS https://YOUR-RENDER-URL.onrender.com/api/cron/check-missing-reports?token=$CRON_TOKEN"
+    envVars:
+      - key: CRON_TOKEN
+        sync: false
