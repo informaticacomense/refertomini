@@ -19,16 +19,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .catch(() => router.push("/login"));
   }, [router]);
 
-  const logout = async () => {
+  const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     router.push("/login?logout=1");
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-sky-100 via-blue-50 to-sky-200 text-slate-800">
+    <div className="flex min-h-screen bg-gradient-to-br from-sky-50 to-blue-200 text-slate-800">
       {/* Sidebar */}
-      <aside className="w-64 bg-white/70 backdrop-blur-lg shadow-lg border-r border-slate-200 p-6 flex flex-col">
-        <div className="flex items-center gap-3 mb-8">
+      <aside className="w-64 bg-white/80 backdrop-blur-md shadow-lg border-r border-slate-200 flex flex-col p-5 fixed inset-y-0">
+        <div className="flex items-center gap-3 mb-10">
           <img src="/logo-default.png" alt="Logo" className="h-10" />
           <div>
             <h1 className="text-xl font-bold text-blue-700">REFERTIMINI</h1>
@@ -47,9 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               key={link.href}
               href={link.href}
-              className={`block px-4 py-2 rounded-lg transition-all ${
+              className={`block px-4 py-2 rounded-lg text-sm transition-all ${
                 pathname === link.href
-                  ? "bg-blue-600 text-white font-semibold"
+                  ? "bg-blue-600 text-white font-semibold shadow-md"
                   : "hover:bg-blue-100"
               }`}
             >
@@ -60,12 +60,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="border-t pt-4 mt-6">
           {user && (
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-gray-600 mb-3">
               👋 {user.firstName} {user.lastName}
             </p>
           )}
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all"
           >
             Esci
@@ -74,7 +74,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Contenuto */}
-      <main className="flex-1 p-10 overflow-y-auto">{children}</main>
+      <main className="ml-64 flex-1 p-10 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }
