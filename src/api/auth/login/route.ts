@@ -27,7 +27,8 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
-    const res = NextResponse.json({
+    // Imposta il cookie in modo compatibile con HTTPS su Render
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -37,20 +38,16 @@ export async function POST(req: Request) {
       },
     });
 
-    res.cookies.set({
-      name: "refertimini_token",
-      value: token,
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 giorni
-    });
+    response.headers.append(
+      "Set-Cookie",
+      `refertimini_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; ${
+        process.env.NODE_ENV === "production" ? "Secure;" : ""
+      }`
+    );
 
-    return res;
+    return response;
   } catch (error) {
     console.error("Errore login:", error);
-    return NextResponse.json({ error: "Errore del server." }, { status: 500 });
+    return NextResponse.json({ error: "Errore durante il login." }, { status: 500 });
   }
 }
-
