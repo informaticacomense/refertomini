@@ -5,14 +5,10 @@ import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email, password } = body;
+    const { email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email e password sono obbligatorie." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email e password richieste." }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
@@ -20,48 +16,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Utente non trovato." }, { status: 404 });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
       return NextResponse.json({ error: "Password errata." }, { status: 401 });
     }
 
-    // 🔐 Genera token JWT
     const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        isSuperAdmin: user.isSuperAdmin,
-        committeeId: user.committeeId,
-      },
-      process.env.JWT_SECRET || "supersegreto_refertimini",
+      { id: user.id, email: user.email, isSuperAdmin: user.isSuperAdmin },
+      process.env.JWT_SECRET || "refertimini_secret",
       { expiresIn: "7d" }
     );
 
-    // Imposta cookie httpOnly
-    const response = NextResponse.json({
+    const res = NextResponse.json({
       success: true,
-      message: "Accesso eseguito con successo.",
       user: {
+        id: user.id,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName,
         isSuperAdmin: user.isSuperAdmin,
       },
     });
 
-    response.cookies.set({
+    res.cookies.set({
       name: "refertimini_token",
       value: token,
       httpOnly: true,
       secure: true,
+      sameSite: "strict",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 giorni
     });
 
-    return response;
-  } catch (err) {
-    console.error("Errore login:", err);
-    return NextResponse.json({ error: "Errore interno del server." }, { status: 500 });
+    return res;
+  } catch (error) {
+    console.error("Errore login:", error);
+    return NextResponse.json({ error: "Errore del server." }, { status: 500 });
   }
 }
+
