@@ -1,93 +1,29 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-export default function AdminPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Token mancante");
-        setUser(data.user);
-      } catch {
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUser();
-  }, [router]);
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    router.push("/login?logout=1");
-  };
-
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-100">
-        <p className="text-blue-800 text-lg">Caricamento...</p>
-      </div>
-    );
-
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 flex flex-col">
-      <header className="bg-white shadow-md py-4">
-        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src="/logo-default.png" className="h-8" alt="Logo" />
-            <h1 className="text-xl font-bold text-blue-700">REFERTIMINI</h1>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-          >
-            Esci
-          </button>
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-blue-800">Dashboard Amministrativa</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="p-6 rounded-2xl bg-white/60 backdrop-blur-lg shadow-lg border-t-4 border-blue-500">
+          <h3 className="text-lg font-semibold text-gray-700">Referti Caricati</h3>
+          <p className="text-4xl font-bold text-blue-600 mt-3">0</p>
         </div>
-      </header>
 
-      <main className="flex-grow max-w-6xl mx-auto p-6">
-        {user ? (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-blue-800">
-              Benvenuto, {user.firstName} {user.lastName}
-            </h2>
-            {user.isSuperAdmin && (
-              <p className="text-gray-600">
-                🔐 Accesso come <strong>Super Admin</strong>
-              </p>
-            )}
+        <div className="p-6 rounded-2xl bg-white/60 backdrop-blur-lg shadow-lg border-t-4 border-green-500">
+          <h3 className="text-lg font-semibold text-gray-700">Gare Programmate</h3>
+          <p className="text-4xl font-bold text-green-600 mt-3">0</p>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
-              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-blue-500">
-                <h3 className="text-gray-700 font-semibold mb-2">Referti Caricati</h3>
-                <p className="text-3xl font-bold text-blue-600">0</p>
-              </div>
-              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-green-500">
-                <h3 className="text-gray-700 font-semibold mb-2">Gare in Programma</h3>
-                <p className="text-3xl font-bold text-green-600">0</p>
-              </div>
-              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-orange-500">
-                <h3 className="text-gray-700 font-semibold mb-2">Utenti Registrati</h3>
-                <p className="text-3xl font-bold text-orange-600">0</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-gray-500">Utente non trovato.</p>
-        )}
-      </main>
+        <div className="p-6 rounded-2xl bg-white/60 backdrop-blur-lg shadow-lg border-t-4 border-orange-500">
+          <h3 className="text-lg font-semibold text-gray-700">Utenti Registrati</h3>
+          <p className="text-4xl font-bold text-orange-600 mt-3">0</p>
+        </div>
+      </div>
 
-      <footer className="text-center py-4 text-sm text-gray-500">
-        © 2025 Informatica Comense — REFERTIMINI
-      </footer>
+      <div className="mt-12">
+        <h3 className="text-2xl font-semibold mb-4 text-slate-800">Ultime attività</h3>
+        <p className="text-gray-500 italic">Nessuna attività recente.</p>
+      </div>
     </div>
   );
 }
