@@ -27,7 +27,6 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
-    // Imposta il cookie in modo compatibile con HTTPS su Render
     const response = NextResponse.json({
       success: true,
       user: {
@@ -38,11 +37,10 @@ export async function POST(req: Request) {
       },
     });
 
+    // ✅ cookie compatibile Render HTTPS
     response.headers.append(
       "Set-Cookie",
-      `refertimini_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; ${
-        process.env.NODE_ENV === "production" ? "Secure;" : ""
-      }`
+      `refertimini_token=${token}; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=${60 * 60 * 24 * 7}`
     );
 
     return response;
