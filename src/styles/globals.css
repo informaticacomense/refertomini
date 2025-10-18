@@ -1,0 +1,22 @@
+/* src/styles/globals.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f9fafb;
+  color: #111827;
+  min-height: 100vh;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
