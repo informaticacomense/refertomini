@@ -1,98 +1,92 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AdminPage() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadUser() {
+    async function fetchUser() {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch("/api/auth/me", { credentials: "include" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Errore nel caricamento utente");
+        if (!res.ok) throw new Error(data.error || "Token mancante");
         setUser(data.user);
-      } catch (err: any) {
-        setError(err.message);
+      } catch {
+        router.push("/login");
       } finally {
         setLoading(false);
       }
     }
-    loadUser();
-  }, []);
+    fetchUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    router.push("/login?logout=1");
+  };
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Caricamento in corso...</p>
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center">
-        <p className="text-red-600 font-semibold">{error}</p>
-        <a href="/login" className="mt-4 text-blue-600 hover:underline">
-          Torna al login
-        </a>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-100">
+        <p className="text-blue-800 text-lg">Caricamento...</p>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-100 to-blue-200">
-      <header className="bg-white shadow p-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <img src="/logo-default.png" alt="Logo" className="h-8" />
-          <h1 className="font-bold text-xl">REFERTIMINI</h1>
-        </div>
-        <div className="text-sm text-gray-600">
-          Super Admin: <span className="font-semibold">{user.firstName} {user.lastName}</span>
-          <br />
-          <span className="text-xs">{user.email}</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 flex flex-col">
+      <header className="bg-white shadow-md py-4">
+        <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <img src="/logo-default.png" className="h-8" alt="Logo" />
+            <h1 className="text-xl font-bold text-blue-700">REFERTIMINI</h1>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            Esci
+          </button>
         </div>
       </header>
 
-      <main className="p-8 max-w-5xl mx-auto">
-        <h2 className="text-lg font-bold mb-4">Pannello di Controllo</h2>
-        <div className="grid grid-cols-2 gap-6">
-          <a
-            href="#"
-            className="bg-white shadow rounded-xl p-6 hover:shadow-lg transition"
-          >
-            📄 <strong>Carica Referto</strong>
-            <p className="text-sm text-gray-500 mt-1">Invia PDF referti partite</p>
-          </a>
+      <main className="flex-grow max-w-6xl mx-auto p-6">
+        {user ? (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold text-blue-800">
+              Benvenuto, {user.firstName} {user.lastName}
+            </h2>
+            {user.isSuperAdmin && (
+              <p className="text-gray-600">
+                🔐 Accesso come <strong>Super Admin</strong>
+              </p>
+            )}
 
-          <a
-            href="#"
-            className="bg-white shadow rounded-xl p-6 hover:shadow-lg transition"
-          >
-            📅 <strong>Calendari</strong>
-            <p className="text-sm text-gray-500 mt-1">Gestisci il calendario gare</p>
-          </a>
-
-          <a
-            href="#"
-            className="bg-white shadow rounded-xl p-6 hover:shadow-lg transition"
-          >
-            👥 <strong>Utenti</strong>
-            <p className="text-sm text-gray-500 mt-1">Visualizza e gestisci gli utenti</p>
-          </a>
-
-          <a
-            href="/logout"
-            className="bg-red-50 border border-red-200 rounded-xl p-6 hover:bg-red-100 transition"
-          >
-            🚪 <strong>Logout</strong>
-            <p className="text-sm text-gray-500 mt-1">Esci dal sistema</p>
-          </a>
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
+              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-blue-500">
+                <h3 className="text-gray-700 font-semibold mb-2">Referti Caricati</h3>
+                <p className="text-3xl font-bold text-blue-600">0</p>
+              </div>
+              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-green-500">
+                <h3 className="text-gray-700 font-semibold mb-2">Gare in Programma</h3>
+                <p className="text-3xl font-bold text-green-600">0</p>
+              </div>
+              <div className="bg-white shadow rounded-xl p-6 text-center border-t-4 border-orange-500">
+                <h3 className="text-gray-700 font-semibold mb-2">Utenti Registrati</h3>
+                <p className="text-3xl font-bold text-orange-600">0</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500">Utente non trovato.</p>
+        )}
       </main>
 
-      <footer className="text-center text-xs text-gray-500 mt-10">
-        Powered by Informatica Comense
+      <footer className="text-center py-4 text-sm text-gray-500">
+        © 2025 Informatica Comense — REFERTIMINI
       </footer>
     </div>
   );
