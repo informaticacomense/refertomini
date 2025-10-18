@@ -21,15 +21,13 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // ✅ fondamentale per salvare il cookie JWT
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Errore durante il login.");
-      }
+      if (!res.ok) throw new Error(data.error || "Errore durante il login.");
 
-      // Login riuscito: vai alla dashboard
       router.push("/admin");
     } catch (err: any) {
       setError(err.message);
@@ -39,12 +37,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-sky-200 to-blue-300 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-100 to-blue-300">
       <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-md transform transition-all hover:scale-[1.01]">
         <div className="flex flex-col items-center mb-8">
           <img src="/logo-default.png" alt="Logo" className="w-16 h-16 mb-2" />
-          <h1 className="text-3xl font-bold text-blue-800 tracking-tight">REFERTIMINI</h1>
-          <p className="text-sm text-gray-500">powered by Informatica Comense</p>
+          <h1 className="text-3xl font-extrabold text-blue-800 tracking-tight">
+            REFERTIMINI
+          </h1>
+          <p className="text-sm text-gray-500">
+            powered by <strong>Informatica Comense</strong>
+          </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -54,7 +56,7 @@ export default function LoginPage() {
             </label>
             <input
               type="email"
-              placeholder="Inserisci la tua email"
+              placeholder="es. admin@test.it"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -78,9 +80,9 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 text-sm text-gray-500"
+                className="absolute inset-y-0 right-3 text-sm text-gray-500 hover:text-gray-700"
               >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
           </div>
@@ -98,19 +100,20 @@ export default function LoginPage() {
           >
             {loading ? "Accesso in corso..." : "Accedi"}
           </button>
-
-          <p className="text-xs text-center text-gray-500 mt-2">
-            Hai dimenticato la password?{" "}
-            <a href="/forgot" className="text-blue-600 hover:underline">
-              Recuperala qui
-            </a>
-          </p>
         </form>
 
-        <div className="text-center text-xs text-gray-400 mt-6">
+        <div className="text-center text-xs text-gray-500 mt-6">
+          Hai dimenticato la password?{" "}
+          <a href="/forgot" className="text-blue-600 hover:underline">
+            Recuperala qui
+          </a>
+        </div>
+
+        <div className="text-center text-xs text-gray-400 mt-4">
           © {new Date().getFullYear()} Informatica Comense
         </div>
       </div>
     </div>
   );
 }
+
