@@ -159,12 +159,14 @@ export default function AdminsPage() {
                   {new Date(a.createdAt).toLocaleDateString("it-IT")}
                 </td>
                 <td className="border p-2 text-center">
-                  <button
-                    onClick={() => openModal(a.committee?.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs"
-                  >
-                    Reimposta Password
-                  </button>
+                  {a.isAdmin && (
+                    <button
+                      onClick={() => openModal(a.committeeId)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs"
+                    >
+                      Reimposta Password
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -206,3 +208,4 @@ export default function AdminsPage() {
     </div>
   );
 }
+
