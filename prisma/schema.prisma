@@ -23,10 +23,11 @@ enum GameStatus {
 // ======================================================
 model Season {
   id         String      @id @default(cuid())
-  name       String      @unique                     // es: "2024/2025"
+  name       String      @unique                     // es: "2025/2026"
   startDate  DateTime
   endDate    DateTime
   committees Committee[]
+  categories Category[]
   createdAt  DateTime    @default(now())
 }
 
@@ -48,17 +49,45 @@ model Committee {
 }
 
 // ======================================================
-// MODELLO CATEGORIA (es. Scoiattoli, Aquilotti…)
+// MODELLO CATEGORIA (es. Scoiattoli Maschile / Gazzelle Femminile…)
 // ======================================================
 model Category {
   id          String      @id @default(cuid())
-  name        String
+  name        String                               // Nome completo (es. Aquilotti Maschile)
+  shortName   String                               // Nome breve (es. AQM)
+  gender      String                               // Maschile / Femminile
+  seasonId    String
+  season      Season     @relation(fields: [seasonId], references: [id])
   committeeId String
-  committee   Committee   @relation(fields: [committeeId], references: [id])
+  committee   Committee  @relation(fields: [committeeId], references: [id])
+  groups      Group[]
+  phases      Phase[]
   games       Game[]
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime   @default(now())
 
-  @@unique([committeeId, name])
+  @@unique([committeeId, name, seasonId])
+}
+
+// ======================================================
+// MODELLO GIRONE (es. Girone A, Girone B…)
+// ======================================================
+model Group {
+  id          String     @id @default(cuid())
+  name        String
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime   @default(now())
+}
+
+// ======================================================
+// MODELLO FASE (es. Fase Provinciale, Fase Regionale…)
+// ======================================================
+model Phase {
+  id          String     @id @default(cuid())
+  name        String
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime   @default(now())
 }
 
 // ======================================================
@@ -150,4 +179,3 @@ model Report {
   uploadedBy   User       @relation("UserReports", fields: [uploadedById], references: [id])
   createdAt    DateTime   @default(now())
 }
-
