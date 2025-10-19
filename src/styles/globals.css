@@ -2,11 +2,5 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Stile base generale */
-body {
-  @apply bg-slate-50 text-slate-900 font-sans;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+body { @apply bg-slate-50 text-slate-900 font-sans; }
+html { scroll-behavior: smooth; }
