@@ -32,10 +32,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "⚙️ Impostazioni" },
   ];
 
-  if (user?.isSuperAdmin) {
+if (user?.isSuperAdmin) {
   links.splice(1, 0, { href: "/admin/committees", label: "🏛️ Comitati" });
   links.splice(2, 0, { href: "/admin/seasons", label: "📅 Stagioni" });
+  links.splice(3, 0, { href: "/admin/admins", label: "🧑‍💼 Admin Comitati" });
 }
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-slate-800">
