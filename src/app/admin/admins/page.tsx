@@ -13,7 +13,16 @@ export default function AdminsPage() {
   const [modalMsg, setModalMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const loadAdmins = () => fetch("/api/admins").then(r => r.json()).then(setAdmins);
+  const loadAdmins = () =>
+  fetch("/api/admins")
+    .then(async (r) => {
+      const data = await r.json();
+      // compatibile sia con {admins:[]} che con []
+      return Array.isArray(data) ? data : data.admins;
+    })
+    .then(setAdmins)
+    .catch((err) => console.error("Errore caricamento admins:", err));
+
   const loadCommittees = () => fetch("/api/committees").then(r => r.json()).then(setCommittees);
 
   useEffect(() => {
