@@ -40,7 +40,11 @@ export default function AdminsPage() {
     }
   };
 
-  const openModal = (committeeId: string) => {
+  const openModal = (committeeId: string | undefined) => {
+    if (!committeeId) {
+      setModalMsg("⚠️ Questo admin non ha un comitato associato");
+      return;
+    }
     setSelectedCommitteeId(committeeId);
     setNewPassword("");
     setModalMsg("");
@@ -156,7 +160,7 @@ export default function AdminsPage() {
                 </td>
                 <td className="border p-2 text-center">
                   <button
-                    onClick={() => openModal(a.committeeId)}
+                    onClick={() => openModal(a.committee?.id)}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs"
                   >
                     Reimposta Password
@@ -175,7 +179,7 @@ export default function AdminsPage() {
             <h3 className="text-lg font-semibold text-blue-800 mb-4">Reimposta Password</h3>
             <input
               type="password"
-              placeholder="Nuova password"
+              placeholder="Nuova password (min 8 caratteri)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="border rounded-md p-2 w-full mb-3"
