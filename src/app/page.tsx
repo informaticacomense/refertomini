@@ -1,23 +1,16 @@
-export default function HomePage() {
+import Link from "next/link";
+
+export default function Home() {
   return (
-    <main style={{ fontFamily: "sans-serif", textAlign: "center", padding: "5rem" }}>
-      <h1>🏀 REFERTIMINI</h1>
-      <h2>powered by Informatica Comense</h2>
-      <p>Benvenuto nel sistema di gestione referti minibasket.</p>
-      <a
+    <div className="py-16 text-center">
+      <h1 className="text-3xl font-bold text-blue-800 mb-3">REFERTIMINI</h1>
+      <p className="text-slate-600 mb-8">Area riservata caricamento referti PDF</p>
+      <Link
         href="/login"
-        style={{
-          display: "inline-block",
-          marginTop: "2rem",
-          padding: "1rem 2rem",
-          background: "#0070f3",
-          color: "#fff",
-          borderRadius: "8px",
-          textDecoration: "none",
-        }}
+        className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
       >
-        Accedi
-      </a>
-    </main>
+        Vai al Login
+      </Link>
+    </div>
   );
 }
