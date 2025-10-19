@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,8 +38,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-10 w-full max-w-md">
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <div className="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl p-10 w-full max-w-md">
         <div className="text-center mb-6">
           <img src="/logo-default.png" alt="Logo" className="w-16 h-16 mx-auto mb-2" />
           <h1 className="text-3xl font-bold text-blue-800">REFERTIMINI</h1>
@@ -67,7 +68,17 @@ export default function LoginPage() {
             {loading ? "Accesso in corso..." : "Accedi"}
           </button>
         </form>
+
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-600">
+            Non sei ancora registrato?{" "}
+            <Link href="/register" className="text-blue-700 font-semibold hover:underline">
+              Clicca qui per registrarti
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
