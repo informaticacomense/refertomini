@@ -38,6 +38,10 @@ if (user?.isSuperAdmin) {
   links.splice(3, 0, { href: "/admin/admins", label: "🧑‍💼 Admin Comitati" });
 }
 
+  if (user?.isAdmin) {
+  links.splice(3, 0, { href: "/admin/categories", label: "🏀 Categorie" });
+}
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-slate-800">
