@@ -1,0 +1,34 @@
+// DELETE /api/admin/groups/[groupId]
+import { prisma } from "@/lib/prisma";
+
+export async function DELETE(req, { params }) {
+  const { groupId } = params;
+
+  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  if (!group)
+    return Response.json({ error: "Girone non trovato" }, { status: 404 });
+
+  await prisma.group.delete({ where: { id: groupId } });
+
+  return Response.json({ success: true });
+}
+// PATCH /api/admin/groups/[groupId]
+// body: { name?: string }
+
+import { prisma } from "@/lib/prisma";
+
+export async function PATCH(req, { params }) {
+  const { groupId } = params;
+  const data = await req.json();
+
+  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  if (!group)
+    return Response.json({ error: "Girone non trovato" }, { status: 404 });
+
+  const updated = await prisma.group.update({
+    where: { id: groupId },
+    data: { name: data.name ?? group.name },
+  });
+
+  return Response.json(updated);
+}
