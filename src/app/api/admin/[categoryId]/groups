@@ -1,0 +1,42 @@
+// GET /api/admin/categories/[categoryId]/groups
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req, { params }) {
+  const { categoryId } = params;
+  const groups = await prisma.group.findMany({
+    where: { categoryId },
+    include: { teams: true },
+    orderBy: { name: "asc" },
+  });
+
+  return Response.json(groups);
+}
+// POST /api/admin/categories/[categoryId]/groups
+// body: { name: string, seasonId: string, committeeId: string }
+
+import { prisma } from "@/lib/prisma";
+
+export async function POST(req, { params }) {
+  const { categoryId } = params;
+  const data = await req.json();
+
+  if (!data.name || !data.seasonId || !data.committeeId)
+    return Response.json({ error: "Dati mancanti" }, { status: 400 });
+
+  const exists = await prisma.group.findFirst({
+    where: { categoryId, name: data.name },
+  });
+  if (exists)
+    return Response.json({ error: "Girone già esistente" }, { status: 400 });
+
+  const group = await prisma.group.create({
+    data: {
+      name: data.name,
+      categoryId,
+      seasonId: data.seasonId,
+      committeeId: data.committeeId,
+    },
+  });
+
+  return Response.json(group);
+}
