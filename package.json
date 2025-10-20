@@ -7,8 +7,6 @@
     "start": "next start",
     "prisma:dev": "prisma migrate dev --name init && tsx prisma/seed.ts",
     "seed": "tsx prisma/seed.ts"
-    "prisma": {
-    "seed": "ts-node --transpile-only prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.650.0",
@@ -26,14 +24,16 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-  "autoprefixer": "^10.4.14",
-  "postcss": "^8.4.24",
-  "tailwindcss": "^3.4.3",
-  "tsx": "^4.15.7",
-  "typescript": "^5.6.2",
-  "prisma": "^6.0.0",
-  "@types/react": "^18.3.3",
-  "@types/node": "^20.11.30"
-}
-
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.4.3",
+    "tsx": "^4.15.7",
+    "typescript": "^5.6.2",
+    "prisma": "^6.0.0",
+    "@types/react": "^18.3.3",
+    "@types/node": "^20.11.30"
+  },
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seed.ts"
+  }
 }
