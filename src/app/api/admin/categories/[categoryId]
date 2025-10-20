@@ -1,0 +1,14 @@
+// DELETE /api/admin/categories/[categoryId]
+import { prisma } from "@/lib/prisma";
+
+export async function DELETE(req, { params }) {
+  const { categoryId } = params;
+
+  const category = await prisma.category.findUnique({ where: { id: categoryId } });
+  if (!category)
+    return Response.json({ error: "Categoria non trovata" }, { status: 404 });
+
+  await prisma.category.delete({ where: { id: categoryId } });
+
+  return Response.json({ success: true });
+}
