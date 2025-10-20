@@ -12,3 +12,23 @@ export async function DELETE(req, { params }) {
 
   return Response.json({ success: true });
 }
+// PATCH /api/admin/categories/[categoryId]
+// body: { name?: string }
+
+import { prisma } from "@/lib/prisma";
+
+export async function PATCH(req, { params }) {
+  const { categoryId } = params;
+  const data = await req.json();
+
+  const category = await prisma.category.findUnique({ where: { id: categoryId } });
+  if (!category)
+    return Response.json({ error: "Categoria non trovata" }, { status: 404 });
+
+  const updated = await prisma.category.update({
+    where: { id: categoryId },
+    data: { name: data.name ?? category.name },
+  });
+
+  return Response.json(updated);
+}
