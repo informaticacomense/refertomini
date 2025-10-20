@@ -22,40 +22,42 @@ enum GameStatus {
 // MODELLO STAGIONE SPORTIVA
 // ======================================================
 model Season {
-  id         String      @id @default(cuid())
-  name       String      @unique                     // es: "2025/2026"
-  startDate  DateTime
-  endDate    DateTime
-  committees Committee[]
-  categories Category[]
-  createdAt  DateTime    @default(now())
+  id          String      @id @default(cuid())
+  name        String      @unique
+  startDate   DateTime
+  endDate     DateTime
+  committees  Committee[]
+  categories  Category[]
+  groups      Group[]      // 🔁 Relazione inversa
+  createdAt   DateTime     @default(now())
 }
 
 // ======================================================
-// MODELLO COMITATO (es. FIP ComoLecco)
+// MODELLO COMITATO
 // ======================================================
 model Committee {
-  id         String      @id @default(cuid())
-  name       String
-  logoUrl    String?
-  seasonId   String
-  season     Season      @relation(fields: [seasonId], references: [id])
-  categories Category[]
-  companies  Company[]
-  users      User[]
-  createdAt  DateTime    @default(now())
+  id          String      @id @default(cuid())
+  name        String
+  logoUrl     String?
+  seasonId    String
+  season      Season      @relation(fields: [seasonId], references: [id])
+  categories  Category[]
+  groups      Group[]      // 🔁 Relazione inversa
+  companies   Company[]
+  users       User[]
+  createdAt   DateTime     @default(now())
 
   @@unique([seasonId, name])
 }
 
 // ======================================================
-// MODELLO CATEGORIA (es. Aquilotti, Esordienti...)
+// MODELLO CATEGORIA
 // ======================================================
 model Category {
   id          String       @id @default(cuid())
   name        String
   shortName   String?
-  gender      String?                              // Maschile / Femminile
+  gender      String?
   seasonId    String
   season      Season       @relation(fields: [seasonId], references: [id])
   committeeId String
@@ -70,7 +72,7 @@ model Category {
 }
 
 // ======================================================
-// MODELLO GIRONE (es. Girone A, Girone B…)
+// MODELLO GIRONE
 // ======================================================
 model Group {
   id          String       @id @default(cuid())
@@ -89,7 +91,7 @@ model Group {
 }
 
 // ======================================================
-// MODELLO FASE (es. Fase Provinciale, Fase Regionale…)
+// MODELLO FASE
 // ======================================================
 model Phase {
   id          String     @id @default(cuid())
@@ -100,7 +102,7 @@ model Phase {
 }
 
 // ======================================================
-// MODELLO SOCIETÀ / SQUADRA
+// MODELLO SOCIETÀ / CLUB
 // ======================================================
 model Company {
   id          String      @id @default(cuid())
@@ -110,19 +112,21 @@ model Company {
   users       User[]
   gamesA      Game[]      @relation("TeamA")
   gamesB      Game[]      @relation("TeamB")
+  teams       Team[]      // 🔁 Relazione inversa (Team.company)
   createdAt   DateTime    @default(now())
 
   @@unique([committeeId, name])
 }
 
 // ======================================================
-// MODELLO TEAM (squadra iscritta in un girone)
+// MODELLO TEAM (squadra iscritta ai gironi)
 // ======================================================
 model Team {
   id          String      @id @default(cuid())
   name        String
   companyId   String?
   company     Company?    @relation(fields: [companyId], references: [id])
+  groups      TeamInGroup[] // 🔁 Relazione inversa (TeamInGroup.team)
   createdAt   DateTime    @default(now())
 }
 
@@ -201,7 +205,7 @@ model Report {
 }
 
 // ======================================================
-// MODELLO DI ASSOCIAZIONE SQUADRE-GIRONI
+// MODELLO DI ASSOCIAZIONE TEAM–GIRONI
 // ======================================================
 model TeamInGroup {
   id        String   @id @default(cuid())
@@ -213,3 +217,4 @@ model TeamInGroup {
 
   @@unique([groupId, teamId])
 }
+
