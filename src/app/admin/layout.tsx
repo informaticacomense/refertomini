@@ -24,6 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/login?logout=1");
   };
 
+  // === LINKS BASE ===
   const links = [
     { href: "/admin", label: "🏠 Dashboard" },
     { href: "/admin/utenti", label: "🧑‍💼 Utenti" },
@@ -32,16 +33,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "⚙️ Impostazioni" },
   ];
 
-if (user?.isSuperAdmin) {
-  links.splice(1, 0, { href: "/admin/committees", label: "🏛️ Comitati" });
-  links.splice(2, 0, { href: "/admin/seasons", label: "📅 Stagioni" });
-  links.splice(3, 0, { href: "/admin/admins", label: "🧑‍💼 Admin Comitati" });
-}
+  // === SUPERADMIN LINKS ===
+  if (user?.isSuperAdmin) {
+    links.splice(1, 0, { href: "/admin/committees", label: "🏛️ Comitati" });
+    links.splice(2, 0, { href: "/admin/seasons", label: "📅 Stagioni" });
+    links.splice(3, 0, { href: "/admin/admins", label: "🧑‍💼 Admin Comitati" });
+  }
 
-  if (user?.isAdmin) {
-  links.splice(3, 0, { href: "/admin/categories", label: "🏀 Categorie" });
-}
-
+  // === ADMIN (COMITATO) LINKS ===
+  if (user?.isAdmin && user.committeeId) {
+    // aggiunge link diretto alla gestione categorie e gironi
+    links.splice(3, 0, {
+      href: `/admin/committee/${user.committeeId}/categories`,
+      label: "🏀 Categorie e Gironi",
+    });
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-slate-800">
@@ -79,7 +85,11 @@ if (user?.isSuperAdmin) {
           {user && (
             <p className="text-sm text-gray-600 mb-3">
               👋 {user.firstName} {user.lastName}
-              {user.isSuperAdmin && <span className="ml-2 text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md">SUPER</span>}
+              {user.isSuperAdmin && (
+                <span className="ml-2 text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md">
+                  SUPER
+                </span>
+              )}
             </p>
           )}
           <button
