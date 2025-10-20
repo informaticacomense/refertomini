@@ -179,3 +179,48 @@ model Report {
   uploadedBy   User       @relation("UserReports", fields: [uploadedById], references: [id])
   createdAt    DateTime   @default(now())
 }
+
+// ======================================================
+// MODELLO CATEGORIA (es. "Aquilotti", "Esordienti")
+// ======================================================
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  seasonId    String
+  season      Season       @relation(fields: [seasonId], references: [id])
+  committeeId String
+  committee   Committee    @relation(fields: [committeeId], references: [id])
+  groups      Group[]      // collegamento ai gironi
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ======================================================
+// MODELLO GIRONI (es. "Girone A", "Girone B")
+// ======================================================
+model Group {
+  id          String       @id @default(cuid())
+  name        String
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  seasonId    String
+  season      Season       @relation(fields: [seasonId], references: [id])
+  committeeId String
+  committee   Committee    @relation(fields: [committeeId], references: [id])
+  teams       TeamInGroup[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ======================================================
+// MODELLO DI ASSOCIAZIONE SQUADRE-GIRONI
+// ======================================================
+model TeamInGroup {
+  id        String   @id @default(cuid())
+  groupId   String
+  teamId    String
+  group     Group    @relation(fields: [groupId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+}
+
