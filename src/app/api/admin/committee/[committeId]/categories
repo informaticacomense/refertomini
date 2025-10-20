@@ -1,0 +1,15 @@
+// GET /api/admin/committee/[committeeId]/categories?seasonId=...
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req, { params }) {
+  const { committeeId } = params;
+  const seasonId = new URL(req.url).searchParams.get("seasonId");
+
+  const categories = await prisma.category.findMany({
+    where: { committeeId, seasonId },
+    include: { groups: true },
+    orderBy: { name: "asc" },
+  });
+
+  return Response.json(categories);
+}
