@@ -13,3 +13,31 @@ export async function GET(req, { params }) {
 
   return Response.json(categories);
 }
+
+// POST /api/admin/committee/[committeeId]/categories
+// body: { name: string, seasonId: string }
+import { prisma } from "@/lib/prisma";
+
+export async function POST(req, { params }) {
+  const { committeeId } = params;
+  const data = await req.json();
+
+  if (!data.name || !data.seasonId)
+    return Response.json({ error: "Dati incompleti" }, { status: 400 });
+
+  const existing = await prisma.category.findFirst({
+    where: { committeeId, seasonId: data.seasonId, name: data.name },
+  });
+  if (existing)
+    return Response.json({ error: "Categoria già esistente" }, { status: 400 });
+
+  const category = await prisma.category.create({
+    data: {
+      name: data.name,
+      committeeId,
+      seasonId: data.seasonId,
+    },
+  });
+
+  return Response.json(category);
+}
