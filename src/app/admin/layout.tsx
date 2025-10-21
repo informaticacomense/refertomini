@@ -9,6 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
+  // 🔹 Carica utente autenticato
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
       .then(async (r) => {
@@ -19,13 +20,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .catch(() => router.push("/login"));
   }, [router]);
 
+  // 🔹 Logout
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     router.push("/login?logout=1");
   };
 
-  // === LINKS BASE ===
-  const links = [
+  // 🔹 MENU BASE
+  const links: { href: string; label: string }[] = [
     { href: "/admin", label: "🏠 Dashboard" },
     { href: "/admin/utenti", label: "🧑‍💼 Utenti" },
     { href: "/admin/referti", label: "📄 Referti" },
@@ -33,19 +35,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/settings", label: "⚙️ Impostazioni" },
   ];
 
-  // === SUPERADMIN LINKS ===
+  // 🔹 SUPERADMIN MENU
   if (user?.isSuperAdmin) {
     links.splice(1, 0, { href: "/admin/committees", label: "🏛️ Comitati" });
     links.splice(2, 0, { href: "/admin/seasons", label: "📅 Stagioni" });
     links.splice(3, 0, { href: "/admin/admins", label: "🧑‍💼 Admin Comitati" });
   }
 
-  // === ADMIN (COMITATO) LINKS ===
+  // 🔹 ADMIN COMITATO MENU
   if (user?.isAdmin && user.committeeId) {
-    // aggiunge link diretto alla gestione categorie e gironi
+    // Rimuove eventuali duplicati e aggiunge le voci specifiche del comitato
     links.splice(3, 0, {
       href: `/admin/committee/${user.committeeId}/categories`,
       label: "🏀 Categorie e Gironi",
+    });
+    links.splice(4, 0, {
+      href: `/admin/committee/${user.committeeId}/import`,
+      label: "📥 Import Partite CSV",
     });
   }
 
@@ -53,6 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-slate-800">
       {/* SIDEBAR */}
       <aside className="w-64 fixed inset-y-0 bg-white/80 backdrop-blur-lg shadow-xl border-r border-slate-200 flex flex-col p-5 transition-all duration-300">
+        {/* LOGO */}
         <div className="flex items-center gap-3 mb-10">
           <img src="/logo-default.png" alt="Logo" className="h-10 drop-shadow-md" />
           <div>
@@ -61,6 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
+        {/* NAV */}
         <nav className="flex flex-col space-y-2 flex-1">
           {links.map((link) => {
             const active = pathname === link.href;
@@ -68,12 +76,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                  ${
-                    active
-                      ? "bg-blue-600 text-white shadow-md scale-[1.02]"
-                      : "text-slate-700 hover:bg-blue-100 hover:scale-[1.01]"
-                  }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  active
+                    ? "bg-blue-600 text-white shadow-md scale-[1.02]"
+                    : "text-slate-700 hover:bg-blue-100 hover:scale-[1.01]"
+                }`}
               >
                 {link.label}
               </Link>
@@ -81,6 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
+        {/* USER INFO + LOGOUT */}
         <div className="border-t pt-4 mt-6">
           {user && (
             <p className="text-sm text-gray-600 mb-3">
