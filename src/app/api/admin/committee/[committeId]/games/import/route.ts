@@ -28,34 +28,34 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
         where: { name: g.girone, categoryId: category.id },
       });
 
-      await prisma.game.create({
-        data: {
-          number: `${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-          dayName: g.giorno,
-          date: new Date(g.data),
-          timeStr: g.ora,
-          venue: "Campo da definire",
-          status: g.stato || "IN_PROGRAMMA",
-          categoryId: category.id,
+     await prisma.game.create({
+  data: {
+    number: `${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+    dayName: g.giorno,
+    date: new Date(g.data),
+    timeStr: g.ora,
+    venue: "Campo da definire",
+    status: g.stato || "IN_PROGRAMMA",
+    result: `${g.puntiA || 0}-${g.puntiB || 0}`,
 
-          // ✅ Fix: chiave composta corretta per Company
-          teamA: {
-            connectOrCreate: {
-              where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraA } },
-              create: { name: g.squadraA, committeeId: params.committeeId },
-            },
-          },
-          teamB: {
-            connectOrCreate: {
-              where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraB } },
-              create: { name: g.squadraB, committeeId: params.committeeId },
-            },
-          },
+    // ✅ Relazioni corrette
+    category: { connect: { id: category.id } },
 
-          result: `${g.puntiA || 0}-${g.puntiB || 0}`,
-        },
-      });
-    }
+    teamA: {
+      connectOrCreate: {
+        where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraA } },
+        create: { name: g.squadraA, committeeId: params.committeeId },
+      },
+    },
+    teamB: {
+      connectOrCreate: {
+        where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraB } },
+        create: { name: g.squadraB, committeeId: params.committeeId },
+      },
+    },
+  },
+});
+
 
     return NextResponse.json({ message: "✅ Import completato con successo!" });
   } catch (err: any) {
