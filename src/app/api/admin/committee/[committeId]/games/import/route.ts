@@ -37,16 +37,30 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
           venue: "Campo da definire",
           status: g.stato || "IN_PROGRAMMA",
           categoryId: category.id,
-          teamA: { connectOrCreate: { where: { name: g.squadraA }, create: { name: g.squadraA } } },
-          teamB: { connectOrCreate: { where: { name: g.squadraB }, create: { name: g.squadraB } } },
+
+          // ✅ Fix: chiave composta corretta per Company
+          teamA: {
+            connectOrCreate: {
+              where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraA } },
+              create: { name: g.squadraA, committeeId: params.committeeId },
+            },
+          },
+          teamB: {
+            connectOrCreate: {
+              where: { committeeId_name: { committeeId: params.committeeId, name: g.squadraB } },
+              create: { name: g.squadraB, committeeId: params.committeeId },
+            },
+          },
+
           result: `${g.puntiA || 0}-${g.puntiB || 0}`,
         },
       });
     }
 
-    return NextResponse.json({ message: "✅ Import completato" });
+    return NextResponse.json({ message: "✅ Import completato con successo!" });
   } catch (err: any) {
     console.error("Errore import CSV:", err);
-    return NextResponse.json({ error: "Errore durante l'import" }, { status: 500 });
+    return NextResponse.json({ error: "Errore durante l'import CSV" }, { status: 500 });
   }
 }
+
