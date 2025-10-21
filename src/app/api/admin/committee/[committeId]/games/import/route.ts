@@ -1,69 +1,52 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import Papa from "papaparse";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { committeeId: string } }
-) {
+// API per importare partite CSV
+export async function POST(req: Request, { params }: { params: { committeeId: string } }) {
   try {
-    const { seasonId, games } = await req.json();
-    if (!seasonId || !games) {
-      return NextResponse.json({ error: "Dati mancanti" }, { status: 400 });
-    }
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
 
-    let count = 0;
+    if (!file) return NextResponse.json({ error: "File CSV mancante" }, { status: 400 });
+
+    const text = await file.text();
+    const parsed = Papa.parse(text, { header: true, delimiter: ";", skipEmptyLines: true });
+
+    const games = parsed.data as any[];
 
     for (const g of games) {
-      const category = await prisma.category.findFirst({
-        where: {
-          name: g.categoria,
-          seasonId,
-          committeeId: params.committeeId,
-        },
-      });
+      const season = await prisma.season.findUnique({ where: { name: g.stagione } });
+      if (!season) continue;
 
+      const category = await prisma.category.findFirst({
+        where: { name: g.categoria, seasonId: season.id, committeeId: params.committeeId },
+      });
       if (!category) continue;
 
       const group = await prisma.group.findFirst({
-        where: {
-          name: g.girone,
-          categoryId: category.id,
-        },
+        where: { name: g.girone, categoryId: category.id },
       });
-
-      if (!group) continue;
 
       await prisma.game.create({
         data: {
-          number: `${category.shortName || category.name}-${count + 1}`,
-          dayName: g.giorno || "",
+          number: `${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          dayName: g.giorno,
           date: new Date(g.data),
-          timeStr: g.ora || "",
-          venue: "",
+          timeStr: g.ora,
+          venue: "Campo da definire",
           status: g.stato || "IN_PROGRAMMA",
-          result:
-            g.puntiA && g.puntiB ? `${g.puntiA}-${g.puntiB}` : undefined,
           categoryId: category.id,
-          teamA: { connectOrCreate: {
-            where: { name_committeeId: { name: g.squadraA, committeeId: params.committeeId }},
-            create: { name: g.squadraA, committeeId: params.committeeId }
-          }},
-          teamB: { connectOrCreate: {
-            where: { name_committeeId: { name: g.squadraB, committeeId: params.committeeId }},
-            create: { name: g.squadraB, committeeId: params.committeeId }
-          }},
+          teamA: { connectOrCreate: { where: { name: g.squadraA }, create: { name: g.squadraA } } },
+          teamB: { connectOrCreate: { where: { name: g.squadraB }, create: { name: g.squadraB } } },
+          result: `${g.puntiA || 0}-${g.puntiB || 0}`,
         },
       });
-
-      count++;
     }
 
-    return NextResponse.json({ ok: true, count });
-  } catch (error) {
-    console.error("❌ Errore import partite:", error);
-    return NextResponse.json(
-      { error: "Errore durante l'import" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "✅ Import completato" });
+  } catch (err: any) {
+    console.error("Errore import CSV:", err);
+    return NextResponse.json({ error: "Errore durante l'import" }, { status: 500 });
   }
 }
