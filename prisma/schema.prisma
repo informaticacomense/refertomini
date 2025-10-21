@@ -26,10 +26,11 @@ model Season {
   name        String      @unique
   startDate   DateTime
   endDate     DateTime
+  isActive    Boolean     @default(false)   // ✅ stagione attiva
   committees  Committee[]
   categories  Category[]
-  groups      Group[]      // 🔁 Relazione inversa
-  createdAt   DateTime     @default(now())
+  groups      Group[]
+  createdAt   DateTime    @default(now())
 }
 
 // ======================================================
@@ -42,10 +43,10 @@ model Committee {
   seasonId    String
   season      Season      @relation(fields: [seasonId], references: [id])
   categories  Category[]
-  groups      Group[]      // 🔁 Relazione inversa
+  groups      Group[]
   companies   Company[]
   users       User[]
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime    @default(now())
 
   @@unique([seasonId, name])
 }
@@ -126,7 +127,7 @@ model Team {
   name        String
   companyId   String?
   company     Company?    @relation(fields: [companyId], references: [id])
-  groups      TeamInGroup[] // 🔁 Relazione inversa (TeamInGroup.team)
+  groups      TeamInGroup[]
   createdAt   DateTime    @default(now())
 }
 
@@ -217,15 +218,3 @@ model TeamInGroup {
 
   @@unique([groupId, teamId])
 }
-
-model Season {
-  id         String      @id @default(cuid())
-  name       String      @unique
-  startDate  DateTime
-  endDate    DateTime
-  isActive   Boolean     @default(false)   // ✅ nuova colonna
-  committees Committee[]
-  categories Category[]
-  createdAt  DateTime    @default(now())
-}
-
