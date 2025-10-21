@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma db push && next build",
     "start": "next start",
     "prisma:dev": "prisma migrate dev --name init && tsx prisma/seed.ts",
     "seed": "tsx prisma/seed.ts"
