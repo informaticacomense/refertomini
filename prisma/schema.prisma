@@ -218,3 +218,14 @@ model TeamInGroup {
   @@unique([groupId, teamId])
 }
 
+model Season {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean     @default(false)   // ✅ nuova colonna
+  committees Committee[]
+  categories Category[]
+  createdAt  DateTime    @default(now())
+}
+
