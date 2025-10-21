@@ -133,14 +133,33 @@ export default function SeasonsPage() {
                   <td className="border p-2">
                     {new Date(s.endDate).toLocaleDateString("it-IT")}
                   </td>
-                  <td className="border p-2 text-center">
-                    <button
-                      onClick={() => deleteSeason(s.id)}
-                      className="text-red-600 hover:text-red-800 font-medium"
-                    >
-                      Elimina
-                    </button>
-                  </td>
+                  <td className="border p-2 text-center space-x-2">
+  {!s.isActive && (
+    <button
+      onClick={async () => {
+        await fetch("/api/admin/seasons", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: s.id }),
+        });
+        loadSeasons();
+      }}
+      className="text-blue-600 hover:text-blue-800 font-medium"
+    >
+      Attiva
+    </button>
+  )}
+  {s.isActive && (
+    <span className="text-green-700 font-semibold">Attiva ✅</span>
+  )}
+  <button
+    onClick={() => deleteSeason(s.id)}
+    className="text-red-600 hover:text-red-800 font-medium"
+  >
+    Elimina
+  </button>
+</td>
+
                 </tr>
               ))}
             </tbody>
