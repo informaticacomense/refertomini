@@ -1,6 +1,0 @@
--- Fix vincolo Category duplicato / bloccato
-ALTER TABLE "Category" DROP CONSTRAINT IF EXISTS category_unique_per_committee;
-
--- Ricrea correttamente il vincolo unico (committeeId, name, seasonId)
-ALTER TABLE "Category"
-ADD CONSTRAINT category_unique_per_committee UNIQUE ("committeeId", "name", "seasonId");
