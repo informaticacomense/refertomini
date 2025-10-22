@@ -61,7 +61,7 @@ model Category {
   gender      String?
   seasonId    String
   season      Season       @relation(fields: [seasonId], references: [id])
-  committeeId String
+  committeeId String 
   committee   Committee    @relation(fields: [committeeId], references: [id])
   groups      Group[]
   phases      Phase[]
@@ -69,8 +69,8 @@ model Category {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  // 🔁 vincolo unico rinominato per evitare conflitti
-  @@unique([committeeId, name, seasonId], name: "category_unique_per_committee_v2")
+  // ✅ vincolo unico coerente con il DB (stesso nome)
+  @@unique([committeeId, name, seasonId], name: "category_unique_per_committee")
 }
 
 // ======================================================
@@ -219,3 +219,4 @@ model TeamInGroup {
 
   @@unique([groupId, teamId])
 }
+
