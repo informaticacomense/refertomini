@@ -69,7 +69,8 @@ model Category {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-   @@unique([committeeId, name, seasonId], name: "category_unique_per_committee")
+  // 🔁 vincolo unico rinominato per evitare conflitti
+  @@unique([committeeId, name, seasonId], name: "category_unique_per_committee_v2")
 }
 
 // ======================================================
