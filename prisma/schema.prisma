@@ -73,11 +73,6 @@ model Category {
   // @@unique([committeeId, name, seasonId], name: "category_unique_per_committee_v2")
 }
 
-
-  // ✅ vincolo unico coerente con il DB (stesso nome)
-  @@unique([committeeId, name, seasonId], name: "category_unique_per_committee")
-}
-
 // ======================================================
 // MODELLO GIRONE
 // ======================================================
