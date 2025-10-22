@@ -69,9 +69,10 @@ model Category {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
- // ⚠️ RIMOSSO il vincolo univoco per evitare blocchi in deploy
-  // @@unique([committeeId, name, seasonId], name: "category_unique_per_committee_v2")
+  // 🔹 Eliminiamo la riga @@unique che crea conflitti
+  // L’unicità verrà gestita solo lato applicativo
 }
+
 
 // ======================================================
 // MODELLO GIRONE
