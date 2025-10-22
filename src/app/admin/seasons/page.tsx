@@ -20,8 +20,7 @@ export default function AdminSeasonsPage() {
         const res = await fetch("/api/admin/seasons");
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Errore caricamento stagioni");
-        if (Array.isArray(data)) setSeasons(data);
-        else setSeasons([]); // fallback di sicurezza
+        setSeasons(Array.isArray(data) ? data : []);
       } catch (err: any) {
         console.error(err);
         setError("Errore durante il caricamento delle stagioni");
@@ -65,6 +64,26 @@ export default function AdminSeasonsPage() {
     } catch (err) {
       console.error(err);
       setError("Errore durante l'eliminazione");
+    }
+  }
+
+  // === Attiva / Disattiva stagione ===
+  async function toggleActive(id: string, current: boolean) {
+    try {
+      const res = await fetch(`/api/admin/seasons/toggle?id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !current }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setSeasons((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, isActive: data.isActive } : s))
+      );
+    } catch (err) {
+      console.error(err);
+      setError("Errore durante l'aggiornamento dello stato della stagione");
     }
   }
 
@@ -120,6 +139,7 @@ export default function AdminSeasonsPage() {
               <th className="border p-2 text-left">Nome</th>
               <th className="border p-2">Inizio</th>
               <th className="border p-2">Fine</th>
+              <th className="border p-2">Stato</th>
               <th className="border p-2">Azioni</th>
             </tr>
           </thead>
@@ -134,9 +154,28 @@ export default function AdminSeasonsPage() {
                   {new Date(s.endDate).toLocaleDateString()}
                 </td>
                 <td className="border p-2 text-center">
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      s.isActive ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {s.isActive ? "Attiva" : "Non attiva"}
+                  </span>
+                </td>
+                <td className="border p-2 text-center space-x-2">
+                  <button
+                    onClick={() => toggleActive(s.id, s.isActive)}
+                    className={`px-3 py-1 rounded text-xs ${
+                      s.isActive
+                        ? "bg-yellow-500 text-white hover:bg-yellow-600"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
+                  >
+                    {s.isActive ? "Disattiva" : "Attiva"}
+                  </button>
                   <button
                     onClick={() => deleteSeason(s.id)}
-                    className="text-red-600 hover:underline"
+                    className="px-3 py-1 rounded text-xs bg-red-600 text-white hover:bg-red-700"
                   >
                     Elimina
                   </button>
