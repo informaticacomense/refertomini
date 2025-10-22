@@ -1,7 +1,7 @@
 // ======================================================
 // REFERTIMINI – SEED DATABASE
 // powered by Informatica Comense
-// ======================================================
+// =======================================================
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
