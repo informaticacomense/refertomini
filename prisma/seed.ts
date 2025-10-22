@@ -16,14 +16,15 @@ async function main() {
   // ======================================================
   const season = await prisma.season.upsert({
     where: { name: "2025/2026" },
-    update: {},
+    update: { isActive: true },
     create: {
       name: "2025/2026",
-      startDate: new Date("2025-09-01"),
+      startDate: new Date("2025-07-01"),
       endDate: new Date("2026-06-30"),
+      isActive: true,
     },
   });
-  console.log("✅ Stagione:", season.name);
+  console.log(`✅ Stagione attiva: ${season.name}`);
 
   // ======================================================
   // CREA COMITATO FIP COMO-LECCO
@@ -42,74 +43,102 @@ async function main() {
       seasonId: season.id,
     },
   });
-  console.log("✅ Comitato:", committee.name);
+  console.log(`✅ Comitato: ${committee.name}`);
 
   // ======================================================
   // CREA CATEGORIE
   // ======================================================
-  const aquilotti = await prisma.category.create({
-    data: {
-      name: "Aquilotti",
-      shortName: "AQ",
-      gender: "M",
-      seasonId: season.id,
-      committeeId: committee.id,
-    },
-  });
+  const categories = [
+    { name: "Aquilotti", shortName: "AQ", gender: "M" },
+    { name: "Esordienti", shortName: "ES", gender: "M" },
+  ];
 
-  const esordienti = await prisma.category.create({
-    data: {
-      name: "Esordienti",
-      shortName: "ES",
-      gender: "M",
-      seasonId: season.id,
-      committeeId: committee.id,
-    },
-  });
-
-  console.log("✅ Categorie create:", [aquilotti.name, esordienti.name]);
+  for (const cat of categories) {
+    await prisma.category.upsert({
+      where: {
+        committeeId_name_seasonId: {
+          committeeId: committee.id,
+          name: cat.name,
+          seasonId: season.id,
+        },
+      },
+      update: {},
+      create: {
+        ...cat,
+        seasonId: season.id,
+        committeeId: committee.id,
+      },
+    });
+  }
+  console.log(`✅ Categorie create/aggiornate: ${categories.map(c => c.name).join(", ")}`);
 
   // ======================================================
   // CREA GIRONI
   // ======================================================
-  const gironeA = await prisma.group.create({
-    data: {
-      name: "Girone A",
-      categoryId: aquilotti.id,
-      seasonId: season.id,
-      committeeId: committee.id,
-    },
+  const aquilotti = await prisma.category.findFirst({
+    where: { name: "Aquilotti", seasonId: season.id },
   });
 
-  const gironeB = await prisma.group.create({
-    data: {
-      name: "Girone B",
-      categoryId: aquilotti.id,
-      seasonId: season.id,
-      committeeId: committee.id,
-    },
-  });
-
-  console.log("✅ Gironi creati:", [gironeA.name, gironeB.name]);
+  if (aquilotti) {
+    const groups = ["Girone A", "Girone B"];
+    for (const g of groups) {
+      await prisma.group.upsert({
+        where: {
+          categoryId_name: {
+            categoryId: aquilotti.id,
+            name: g,
+          },
+        },
+        update: {},
+        create: {
+          name: g,
+          categoryId: aquilotti.id,
+          seasonId: season.id,
+          committeeId: committee.id,
+        },
+      });
+    }
+    console.log("✅ Gironi creati/aggiornati:", groups);
+  }
 
   // ======================================================
   // CREA SQUADRE
   // ======================================================
-  const team1 = await prisma.team.create({
-    data: { name: "Pol. Basket A" },
-  });
-  const team2 = await prisma.team.create({
-    data: { name: "US Minibasket B" },
+  const teams = [
+    await prisma.team.upsert({
+      where: { name: "Pol. Basket A" },
+      update: {},
+      create: { name: "Pol. Basket A" },
+    }),
+    await prisma.team.upsert({
+      where: { name: "US Minibasket B" },
+      update: {},
+      create: { name: "US Minibasket B" },
+    }),
+  ];
+
+  const gironeA = await prisma.group.findFirst({
+    where: { name: "Girone A", seasonId: season.id },
   });
 
-  await prisma.teamInGroup.createMany({
-    data: [
-      { groupId: gironeA.id, teamId: team1.id },
-      { groupId: gironeA.id, teamId: team2.id },
-    ],
-    skipDuplicates: true,
-  });
-  console.log("✅ Squadre e assegnazioni create");
+  if (gironeA) {
+    for (const team of teams) {
+      await prisma.teamInGroup.upsert({
+        where: {
+          groupId_teamId: {
+            groupId: gironeA.id,
+            teamId: team.id,
+          },
+        },
+        update: {},
+        create: {
+          groupId: gironeA.id,
+          teamId: team.id,
+        },
+      });
+    }
+    console.log("✅ Squadre assegnate al Girone A");
+  }
 
   // ======================================================
   // CREA SUPERADMIN
@@ -132,7 +161,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Superadmin creato:", admin.email);
+  console.log(`✅ Superadmin creato/aggiornato: ${admin.email}`);
 
   console.log("🎉 Seed completato con successo!");
 }
@@ -141,9 +170,7 @@ async function main() {
 // ESECUZIONE
 // ======================================================
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
+  .then(async () => await prisma.$disconnect())
   .catch(async (e) => {
     console.error("❌ Errore nel seed:", e);
     await prisma.$disconnect();
