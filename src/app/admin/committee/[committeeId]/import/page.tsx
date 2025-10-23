@@ -16,30 +16,32 @@ export default function ImportGamesPage({
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // 🔹 Carica stagione attiva
- // 🔹 Carica stagione attiva o l’ultima disponibile
-useEffect(() => {
-  async function loadSeason() {
-    const res = await fetch("/api/admin/seasons");
-    const data = await res.json();
+  // 🔹 Carica stagione attiva o, se non esiste, l’ultima disponibile
+  useEffect(() => {
+    async function loadSeason() {
+      const res = await fetch("/api/admin/seasons");
+      const data = await res.json();
 
-    // Prova prima quella attiva
-    let active = data.find((s: any) => s.isActive);
+      // Cerca prima la stagione attiva
+      let active = data.find((s: any) => s.isActive);
 
-    // Se non c'è, prendi la più recente (fine stagione più grande)
-    if (!active && data.length > 0) {
-      active = data.sort(
-        (a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
-      )[0];
-      console.warn("⚠️ Nessuna stagione attiva, uso quella più recente:", active.name);
+      // Se non c'è, prendi la più recente in base alla data di fine
+      if (!active && data.length > 0) {
+        active = data.sort(
+          (a: any, b: any) =>
+            new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+        )[0];
+        console.warn(
+          "⚠️ Nessuna stagione attiva trovata, uso la più recente:",
+          active.name
+        );
+      }
+
+      if (active) setSeason(active);
     }
 
-    if (active) setSeason(active);
-  }
-
-  loadSeason();
-}, []);
-
+    loadSeason();
+  }, []);
 
   // 🔹 Leggi file CSV
   const handleFileChange = (e: any) => {
@@ -58,7 +60,7 @@ useEffect(() => {
 
   // 🔹 Invia partite al server
   const importGames = async () => {
-    if (!season) return alert("Nessuna stagione attiva trovata.");
+    if (!season) return alert("Nessuna stagione trovata nel database.");
     if (parsed.length === 0) return alert("Nessun dato da importare.");
 
     setUploading(true);
@@ -88,7 +90,7 @@ useEffect(() => {
 
       {season && (
         <p className="text-sm text-gray-600">
-          Stagione attiva: <strong>{season.name}</strong>
+          Stagione utilizzata: <strong>{season.name}</strong>
         </p>
       )}
 
@@ -164,3 +166,4 @@ stagione;categoria;girone;fase;giorno;data;ora;squadraA;squadraB;puntiA;puntiB;s
     </div>
   );
 }
+
