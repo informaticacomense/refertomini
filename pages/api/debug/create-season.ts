@@ -13,9 +13,13 @@ export default async function handler(req, res) {
         isActive: true,
       },
     });
-    res.status(200).json(season);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Errore creazione stagione" });
+    return res.status(200).json(season);
+  } catch (e: any) {
+    console.error("❌ Errore Prisma:", e);
+    return res
+      .status(500)
+      .json({ error: "Errore creazione stagione", details: e.message });
+  } finally {
+    await prisma.$disconnect();
   }
 }
