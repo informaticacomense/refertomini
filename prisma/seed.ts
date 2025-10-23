@@ -101,21 +101,23 @@ async function main() {
     console.log("✅ Gironi creati/aggiornati:", groups);
   }
 
+   // ======================================================
+  // CREA SQUADRE (compatibile anche senza chiave unica)
   // ======================================================
-  // CREA SQUADRE
-  // ======================================================
-  const teams = [
-    await prisma.team.upsert({
-      where: { name: "Pol. Basket A" },
-      update: {},
-      create: { name: "Pol. Basket A" },
-    }),
-    await prisma.team.upsert({
-      where: { name: "US Minibasket B" },
-      update: {},
-      create: { name: "US Minibasket B" },
-    }),
-  ];
+  const teamNames = ["Pol. Basket A", "US Minibasket B"];
+  const teams: any[] = [];
+
+  for (const name of teamNames) {
+    let team = await prisma.team.findFirst({ where: { name } });
+    if (!team) {
+      team = await prisma.team.create({ data: { name } });
+      console.log(`✅ Creata squadra: ${name}`);
+    } else {
+      console.log(`ℹ️ Squadra già presente: ${name}`);
+    }
+    teams.push(team);
+  }
+
 
   const gironeA = await prisma.group.findFirst({
     where: { name: "Girone A", seasonId: season.id },
