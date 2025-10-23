@@ -55,23 +55,23 @@ model Committee {
 // MODELLO CATEGORIA
 // ======================================================
 model Category {
-  id          String       @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   shortName   String?
   gender      String?
   seasonId    String
-  season      Season       @relation(fields: [seasonId], references: [id])
+  season      Season      @relation(fields: [seasonId], references: [id])
   committeeId String 
-  committee   Committee    @relation(fields: [committeeId], references: [id])
+  committee   Committee   @relation(fields: [committeeId], references: [id])
   groups      Group[]
   phases      Phase[]
   games       Game[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  // 🔹 Eliminiamo la riga @@unique che crea conflitti
-  // L’unicità verrà gestita solo lato applicativo
+  @@unique([committeeId, name, seasonId]) // ✅ questo crea il campo combinato
 }
+
 
 
 // ======================================================
