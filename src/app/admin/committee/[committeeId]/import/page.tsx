@@ -17,15 +17,29 @@ export default function ImportGamesPage({
   const [message, setMessage] = useState("");
 
   // 🔹 Carica stagione attiva
-  useEffect(() => {
-    async function loadActiveSeason() {
-      const res = await fetch("/api/admin/seasons");
-      const data = await res.json();
-      const active = data.find((s: any) => s.isActive);
-      if (active) setSeason(active);
+ // 🔹 Carica stagione attiva o l’ultima disponibile
+useEffect(() => {
+  async function loadSeason() {
+    const res = await fetch("/api/admin/seasons");
+    const data = await res.json();
+
+    // Prova prima quella attiva
+    let active = data.find((s: any) => s.isActive);
+
+    // Se non c'è, prendi la più recente (fine stagione più grande)
+    if (!active && data.length > 0) {
+      active = data.sort(
+        (a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+      )[0];
+      console.warn("⚠️ Nessuna stagione attiva, uso quella più recente:", active.name);
     }
-    loadActiveSeason();
-  }, []);
+
+    if (active) setSeason(active);
+  }
+
+  loadSeason();
+}, []);
+
 
   // 🔹 Leggi file CSV
   const handleFileChange = (e: any) => {
