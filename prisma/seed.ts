@@ -1,7 +1,7 @@
 // ======================================================
 // REFERTIMINI – SEED DATABASE
 // powered by Informatica Comense
-// =======================================================
+// ======================================================
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -16,15 +16,15 @@ async function main() {
   // ======================================================
   const season = await prisma.season.upsert({
     where: { name: "2025/2026" },
-    update: { isActive: true },
+    update: {},
     create: {
       name: "2025/2026",
-      startDate: new Date("2025-07-01"),
+      startDate: new Date("2025-09-01"),
       endDate: new Date("2026-06-30"),
       isActive: true,
     },
   });
-  console.log(`✅ Stagione attiva: ${season.name}`);
+  console.log("✅ Stagione:", season.name);
 
   // ======================================================
   // CREA COMITATO FIP COMO-LECCO
@@ -43,7 +43,7 @@ async function main() {
       seasonId: season.id,
     },
   });
-  console.log(`✅ Comitato: ${committee.name}`);
+  console.log("✅ Comitato:", committee.name);
 
   // ======================================================
   // CREA CATEGORIE
@@ -54,55 +54,64 @@ async function main() {
   ];
 
   for (const cat of categories) {
-    await prisma.category.upsert({
+    const existing = await prisma.category.findFirst({
       where: {
-        committeeId_name_seasonId: {
-          committeeId: committee.id,
-          name: cat.name,
-          seasonId: season.id,
-        },
-      },
-      update: {},
-      create: {
-        ...cat,
+        name: cat.name,
         seasonId: season.id,
         committeeId: committee.id,
       },
     });
-  }
-  console.log(`✅ Categorie create/aggiornate: ${categories.map(c => c.name).join(", ")}`);
 
-  // ======================================================
-  // CREA GIRONI
-  // ======================================================
-  const aquilotti = await prisma.category.findFirst({
-    where: { name: "Aquilotti", seasonId: season.id },
-  });
-
-  if (aquilotti) {
-    const groups = ["Girone A", "Girone B"];
-    for (const g of groups) {
-      await prisma.group.upsert({
-        where: {
-          categoryId_name: {
-            categoryId: aquilotti.id,
-            name: g,
-          },
-        },
-        update: {},
-        create: {
-          name: g,
-          categoryId: aquilotti.id,
+    if (!existing) {
+      await prisma.category.create({
+        data: {
+          name: cat.name,
+          shortName: cat.shortName,
+          gender: cat.gender,
           seasonId: season.id,
           committeeId: committee.id,
         },
       });
+      console.log(`✅ Categoria creata: ${cat.name}`);
+    } else {
+      console.log(`ℹ️ Categoria già presente: ${cat.name}`);
     }
-    console.log("✅ Gironi creati/aggiornati:", groups);
   }
 
-   // ======================================================
-  // CREA SQUADRE (compatibile anche senza chiave unica)
+  // ======================================================
+  // CREA GIRONI
+  // ======================================================
+  const categoryAquilotti = await prisma.category.findFirst({
+    where: { name: "Aquilotti", seasonId: season.id },
+  });
+
+  if (categoryAquilotti) {
+    const groups = ["Girone A", "Girone B"];
+    for (const name of groups) {
+      const existing = await prisma.group.findFirst({
+        where: {
+          name,
+          categoryId: categoryAquilotti.id,
+        },
+      });
+      if (!existing) {
+        await prisma.group.create({
+          data: {
+            name,
+            categoryId: categoryAquilotti.id,
+            seasonId: season.id,
+            committeeId: committee.id,
+          },
+        });
+        console.log(`✅ Girone creato: ${name}`);
+      } else {
+        console.log(`ℹ️ Girone già presente: ${name}`);
+      }
+    }
+  }
+
+  // ======================================================
+  // CREA SQUADRE
   // ======================================================
   const teamNames = ["Pol. Basket A", "US Minibasket B"];
   const teams: any[] = [];
@@ -118,26 +127,21 @@ async function main() {
     teams.push(team);
   }
 
-
+  // assegna le squadre al Girone A (solo se esiste)
   const gironeA = await prisma.group.findFirst({
     where: { name: "Girone A", seasonId: season.id },
   });
 
   if (gironeA) {
-    for (const team of teams) {
-      await prisma.teamInGroup.upsert({
-        where: {
-          groupId_teamId: {
-            groupId: gironeA.id,
-            teamId: team.id,
-          },
-        },
-        update: {},
-        create: {
-          groupId: gironeA.id,
-          teamId: team.id,
-        },
+    for (const t of teams) {
+      const existing = await prisma.teamInGroup.findFirst({
+        where: { groupId: gironeA.id, teamId: t.id },
       });
+      if (!existing) {
+        await prisma.teamInGroup.create({
+          data: { groupId: gironeA.id, teamId: t.id },
+        });
+      }
     }
     console.log("✅ Squadre assegnate al Girone A");
   }
@@ -163,8 +167,7 @@ async function main() {
     },
   });
 
-  console.log(`✅ Superadmin creato/aggiornato: ${admin.email}`);
-
+  console.log("✅ Superadmin creato:", admin.email);
   console.log("🎉 Seed completato con successo!");
 }
 
@@ -172,7 +175,9 @@ async function main() {
 // ESECUZIONE
 // ======================================================
 main()
-  .then(async () => await prisma.$disconnect())
+  .then(async () => {
+    await prisma.$disconnect();
+  })
   .catch(async (e) => {
     console.error("❌ Errore nel seed:", e);
     await prisma.$disconnect();
