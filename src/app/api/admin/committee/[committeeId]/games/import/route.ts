@@ -1,100 +1,61 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import Papa from "papaparse";
 
 // ======================================================
-// IMPORT CSV PARTITE – ADMIN COMITATO
+// IMPORT PARTITE – da JSON (non da file diretto)
 // ======================================================
 
 export async function POST(req: Request, { params }: { params: { committeeId: string } }) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const { committeeId } = params;
+    const { seasonId, games } = await req.json(); // ✅ ora legge JSON
 
-    if (!file) {
-      return NextResponse.json({ error: "File CSV mancante" }, { status: 400 });
+    if (!seasonId || !games || games.length === 0) {
+      return NextResponse.json({ error: "Dati CSV mancanti o invalidi" }, { status: 400 });
     }
 
-    const text = await file.text();
-    const parsed = Papa.parse(text, {
-      header: true,
-      delimiter: ";",
-      skipEmptyLines: true,
-    });
-
-    const games = parsed.data as any[];
     let importedCount = 0;
 
     for (const g of games) {
       if (!g.categoria || !g.squadraA || !g.squadraB || !g.data) continue;
 
-      const season = await prisma.season.findUnique({
-        where: { name: g.stagione },
-      });
-      if (!season) continue;
-
+      // 🔍 Cerca la categoria (deve esistere)
       const category = await prisma.category.findFirst({
-        where: { name: g.categoria, seasonId: season.id, committeeId: params.committeeId },
+        where: {
+          name: g.categoria.trim(),
+          seasonId,
+          committeeId,
+        },
       });
+
       if (!category) continue;
 
-      const group = await prisma.group.findFirst({
-        where: { name: g.girone, categoryId: category.id },
-      });
-
-      // 🔍 Evita di duplicare partite già esistenti (stessa data + squadre)
+      // 🔍 Controlla se la partita esiste già
       const existing = await prisma.game.findFirst({
         where: {
-          date: new Date(g.data),
           categoryId: category.id,
-          teamA: { name: g.squadraA },
-          teamB: { name: g.squadraB },
+          date: new Date(`${g.data.split("/").reverse().join("-")}T${g.ora || "00:00"}:00`),
+          homeTeamName: g.squadraA.trim(),
+          awayTeamName: g.squadraB.trim(),
         },
       });
       if (existing) continue;
 
+      // 🔹 Crea nuova partita
       await prisma.game.create({
         data: {
-          number: `${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-          dayName: g.giorno,
-          date: new Date(g.data),
-          timeStr: g.ora,
-          venue: "Campo da definire",
-          status: g.stato || "IN_PROGRAMMA",
-          result: `${g.puntiA || 0}-${g.puntiB || 0}`,
-
-          // ✅ Relazioni corrette
-          category: { connect: { id: category.id } },
-          ...(group && { group: { connect: { id: group.id } } }),
-
-          teamA: {
-            connectOrCreate: {
-              where: {
-                committeeId_name: {
-                  committeeId: params.committeeId,
-                  name: g.squadraA,
-                },
-              },
-              create: {
-                name: g.squadraA,
-                committeeId: params.committeeId,
-              },
-            },
-          },
-          teamB: {
-            connectOrCreate: {
-              where: {
-                committeeId_name: {
-                  committeeId: params.committeeId,
-                  name: g.squadraB,
-                },
-              },
-              create: {
-                name: g.squadraB,
-                committeeId: params.committeeId,
-              },
-            },
-          },
+          seasonId,
+          committeeId,
+          categoryId: category.id,
+          homeTeamName: g.squadraA.trim(),
+          awayTeamName: g.squadraB.trim(),
+          pointsHome: parseInt(g.puntiA) || 0,
+          pointsAway: parseInt(g.puntiB) || 0,
+          status: g.stato?.trim() || "IN_PROGRAMMA",
+          day: g.giorno?.trim(),
+          phase: g.fase?.trim() || null,
+          groupName: g.girone?.trim() || "",
+          date: new Date(`${g.data.split("/").reverse().join("-")}T${g.ora || "00:00"}:00`),
         },
       });
 
@@ -103,6 +64,7 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
 
     return NextResponse.json({
       message: `✅ Import completato con successo (${importedCount} partite importate)`,
+      count: importedCount,
     });
   } catch (err: any) {
     console.error("❌ Errore import CSV:", err);
