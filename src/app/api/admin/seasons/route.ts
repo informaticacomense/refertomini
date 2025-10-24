@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; // ✅ usa default import, coerente con lib/prisma.ts
+import { prisma } from "@/lib/prisma"; // ✅ usa default import, coerente con lib/prisma.ts
 
 // ============================================================
 // 🔹 GET – Tutte le stagioni (ordinate per data di inizio)
