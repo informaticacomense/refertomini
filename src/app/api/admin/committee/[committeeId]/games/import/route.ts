@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // ======================================================
-// IMPORT PARTITE – compatibile con il modello Game
+// IMPORT PARTITE – compatibile con relazioni teamA / teamB
 // ======================================================
 
 export async function POST(req: Request, { params }: { params: { committeeId: string } }) {
@@ -19,7 +19,7 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
     for (const g of games) {
       if (!g.categoria || !g.squadraA || !g.squadraB || !g.data) continue;
 
-      // 🔹 Cerca categoria
+      // 🔹 Cerca la categoria
       const category = await prisma.category.findFirst({
         where: {
           name: g.categoria.trim(),
@@ -29,13 +29,13 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
       });
       if (!category) continue;
 
-      // 🔹 Controlla se esiste già una partita simile
+      // 🔹 Controlla se esiste già una partita con stessa data e squadre
       const existing = await prisma.game.findFirst({
         where: {
           categoryId: category.id,
           date: new Date(`${g.data.split("/").reverse().join("-")}T${g.ora || "00:00"}:00`),
-          teamAName: g.squadraA.trim(),
-          teamBName: g.squadraB.trim(),
+          teamA: { name: g.squadraA.trim() },
+          teamB: { name: g.squadraB.trim() },
         },
       });
       if (existing) continue;
@@ -54,7 +54,7 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
           status: g.stato?.trim() || "IN_PROGRAMMA",
           result: `${g.puntiA || 0}-${g.puntiB || 0}`,
 
-          // 🔸 Se il tuo schema usa teamA/teamB come relazioni
+          // 🔸 Relazioni teamA / teamB
           teamA: {
             connectOrCreate: {
               where: {
@@ -64,8 +64,8 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
                 },
               },
               create: {
-                committeeId,
                 name: g.squadraA.trim(),
+                committeeId,
               },
             },
           },
@@ -78,8 +78,8 @@ export async function POST(req: Request, { params }: { params: { committeeId: st
                 },
               },
               create: {
-                committeeId,
                 name: g.squadraB.trim(),
+                committeeId,
               },
             },
           },
