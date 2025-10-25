@@ -30,6 +30,7 @@ async function main() {
   // ======================================================
   const committee = await prisma.committee.upsert({
     where: {
+      // usa la chiave composta definita nello schema
       seasonId_name: {
         seasonId: season.id,
         name: "FIP Como-Lecco",
@@ -48,8 +49,8 @@ async function main() {
   // CREA CATEGORIE
   // ======================================================
   const categories = [
-    { name: "Aquilotti", shortName: "AQ", gender: "M" },
-    { name: "Esordienti", shortName: "ES", gender: "M" },
+    { name: "Aquilotti" },
+    { name: "Esordienti" },
   ];
 
   for (const cat of categories) {
@@ -76,7 +77,7 @@ async function main() {
   }
 
   // ======================================================
-  // CREA GIRONI
+  // CREA GIRONI (MODELLO Group)
   // ======================================================
   const categoryAquilotti = await prisma.category.findFirst({
     where: { name: "Aquilotti", seasonId: season.id },
@@ -91,13 +92,12 @@ async function main() {
           categoryId: categoryAquilotti.id,
         },
       });
+
       if (!existing) {
         await prisma.group.create({
           data: {
             name,
             categoryId: categoryAquilotti.id,
-            seasonId: season.id,
-            committeeId: committee.id,
           },
         });
         console.log(`✅ Girone creato: ${name}`);
@@ -114,29 +114,48 @@ async function main() {
   const teams: any[] = [];
 
   for (const name of teamNames) {
-    let team = await prisma.team.findFirst({ where: { name } });
+    let team = await prisma.team.findFirst({
+      where: {
+        committeeId_name: {
+          committeeId: committee.id,
+          name,
+        },
+      },
+    });
+
     if (!team) {
-      team = await prisma.team.create({ data: { name } });
+      team = await prisma.team.create({
+        data: {
+          name,
+          committeeId: committee.id,
+        },
+      });
       console.log(`✅ Creata squadra: ${name}`);
     } else {
       console.log(`ℹ️ Squadra già presente: ${name}`);
     }
+
     teams.push(team);
   }
 
-  // assegna le squadre al Girone A (solo se esiste)
+  // ======================================================
+  // ASSEGNA LE SQUADRE AL GIRONe A
+  // ======================================================
   const gironeA = await prisma.group.findFirst({
-    where: { name: "Girone A", seasonId: season.id },
+    where: { name: "Girone A" },
   });
 
   if (gironeA) {
     for (const t of teams) {
       const existing = await prisma.teamInGroup.findFirst({
-        where: { groupId: gironeA.id, teamId: t.id },
+        where: { teamId: t.id, groupName: gironeA.name },
       });
       if (!existing) {
         await prisma.teamInGroup.create({
-          data: { groupId: gironeA.id, teamId: t.id },
+          data: {
+            teamId: t.id,
+            groupName: gironeA.name,
+          },
         });
       }
     }
@@ -152,14 +171,10 @@ async function main() {
     where: { email: "admin@test.it" },
     update: {},
     create: {
+      name: "Super Admin",
       email: "admin@test.it",
       password: hashedPassword,
-      firstName: "Super",
-      lastName: "Admin",
-      teamName: "Informatica Comense",
-      isAdmin: true,
-      isSuperAdmin: true,
-      emailVerified: true,
+      role: "SUPERADMIN",
       committeeId: committee.id,
     },
   });
@@ -180,3 +195,4 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
+
