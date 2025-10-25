@@ -21,7 +21,6 @@ async function main() {
       name: "2025/2026",
       startDate: new Date("2025-09-01"),
       endDate: new Date("2026-06-30"),
-      isActive: true,
     },
   });
   console.log("✅ Stagione:", season.name);
