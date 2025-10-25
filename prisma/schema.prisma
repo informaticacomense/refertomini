@@ -12,6 +12,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ======================================================
+// ENUM – stato partita
+// ======================================================
 enum GameStatus {
   IN_PROGRAMMA
   CARICATA
@@ -22,85 +25,47 @@ enum GameStatus {
 // MODELLO STAGIONE SPORTIVA
 // ======================================================
 model Season {
-  id          String      @id @default(cuid())
-  name        String      @unique
+  id          String       @id @default(cuid())
+  name        String       @unique                     // es: "2024/2025"
   startDate   DateTime
   endDate     DateTime
-  isActive    Boolean     @default(false)
   committees  Committee[]
   categories  Category[]
-  groups      Group[]
-  createdAt   DateTime    @default(now())
+  games       Game[]
+  createdAt   DateTime     @default(now())
 }
 
 // ======================================================
-// MODELLO COMITATO
+// MODELLO COMITATO (es. FIP Como-Lecco)
 // ======================================================
 model Committee {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
   logoUrl     String?
   seasonId    String
-  season      Season      @relation(fields: [seasonId], references: [id])
+  season      Season       @relation(fields: [seasonId], references: [id])
   categories  Category[]
-  groups      Group[]
   companies   Company[]
+  teams       Team[]
+  games       Game[]
   users       User[]
-  createdAt   DateTime    @default(now())
-
-  @@unique([seasonId, name])
+  createdAt   DateTime     @default(now())
 }
 
 // ======================================================
-// MODELLO CATEGORIA
+// MODELLO CATEGORIA (es. Aquilotti, Scoiattoli, Esordienti)
 // ======================================================
 model Category {
-  id          String      @id @default(cuid())
-  name        String
-  shortName   String?
-  gender      String?
-  seasonId    String
-  season      Season      @relation(fields: [seasonId], references: [id])
-  committeeId String
-  committee   Committee   @relation(fields: [committeeId], references: [id])
-  groups      Group[]
-  phases      Phase[]
-  games       Game[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  // Usa lo stesso nome del vincolo già presente in DB per evitare errori su Render
-  @@unique([committeeId, name, seasonId], name: "category_unique_per_committee")
-}
-
-// ======================================================
-// MODELLO GIRONE
-// ======================================================
-model Group {
   id          String       @id @default(cuid())
   name        String
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  seasonId    String
-  season      Season       @relation(fields: [seasonId], references: [id])
   committeeId String
   committee   Committee    @relation(fields: [committeeId], references: [id])
-  teams       TeamInGroup[]
+  seasonId    String
+  season      Season       @relation(fields: [seasonId], references: [id])
+  games       Game[]
   createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
 
-  @@unique([categoryId, name])
-}
-
-// ======================================================
-// MODELLO FASE
-// ======================================================
-model Phase {
-  id          String     @id @default(cuid())
-  name        String
-  categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime   @default(now())
+  @@unique([committeeId, name])
 }
 
 // ======================================================
@@ -112,8 +77,6 @@ model Company {
   committeeId String
   committee   Committee   @relation(fields: [committeeId], references: [id])
   users       User[]
-  gamesA      Game[]      @relation("TeamA")
-  gamesB      Game[]      @relation("TeamB")
   teams       Team[]
   createdAt   DateTime    @default(now())
 
@@ -125,97 +88,69 @@ model Company {
 // ======================================================
 model Team {
   id          String      @id @default(cuid())
-  name        String      @unique // per usare upsert(where: { name })
+  name        String
+  committeeId String
+  committee   Committee   @relation(fields: [committeeId], references: [id])
   companyId   String?
   company     Company?    @relation(fields: [companyId], references: [id])
+  gamesA      Game[]      @relation("TeamA")
+  gamesB      Game[]      @relation("TeamB")
   groups      TeamInGroup[]
   createdAt   DateTime    @default(now())
+
+  @@unique([committeeId, name])
 }
 
 // ======================================================
-// MODELLO UTENTE
-// ======================================================
-model User {
-  id                String     @id @default(cuid())
-  email             String     @unique
-  password          String
-  firstName         String
-  lastName          String
-  teamName          String?
-  isAdmin           Boolean    @default(false)
-  isSuperAdmin      Boolean    @default(false)
-  emailVerified     Boolean    @default(false)
-  verificationToken String?
-  resetToken        String?
-  resetTokenExp     DateTime?
-
-  companyId   String?
-  company     Company?    @relation(fields: [companyId], references: [id])
-
-  committeeId String?
-  committee   Committee?  @relation(fields: [committeeId], references: [id])
-
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  games       Game[]      @relation("GameOwners")
-  reports     Report[]    @relation("UserReports")
-}
-
-// ======================================================
-// MODELLO GARA
+// MODELLO PARTITA
 // ======================================================
 model Game {
-  id           String     @id @default(cuid())
-  number       String
-  dayName      String
+  id           String      @id @default(cuid())
   date         DateTime
-  timeStr      String
-  venue        String
-  status       GameStatus @default(IN_PROGRAMMA)
+  timeStr      String?
+  dayName      String?
+  groupName    String?
+  phase        String?
   result       String?
-  notes        String?
-
+  status       GameStatus  @default(IN_PROGRAMMA)
+  seasonId     String
+  season       Season      @relation(fields: [seasonId], references: [id])
+  committeeId  String
+  committee    Committee   @relation(fields: [committeeId], references: [id])
   categoryId   String
-  category     Category   @relation(fields: [categoryId], references: [id])
-
-  teamAId      String?
-  teamA        Company?   @relation("TeamA", fields: [teamAId], references: [id])
-  teamBId      String?
-  teamB        Company?   @relation("TeamB", fields: [teamBId], references: [id])
-
-  owners       User[]     @relation("GameOwners")
-  report       Report?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@unique([categoryId, number])
+  category     Category    @relation(fields: [categoryId], references: [id])
+  teamAId      String
+  teamA        Team        @relation("TeamA", fields: [teamAId], references: [id])
+  teamBId      String
+  teamB        Team        @relation("TeamB", fields: [teamBId], references: [id])
+  createdAt    DateTime    @default(now())
 }
 
 // ======================================================
-// MODELLO REFERTO PDF
-// ======================================================
-model Report {
-  id           String     @id @default(cuid())
-  gameId       String     @unique
-  game         Game       @relation(fields: [gameId], references: [id])
-  fileKey      String
-  mimeType     String
-  uploadedById String
-  uploadedBy   User       @relation("UserReports", fields: [uploadedById], references: [id])
-  createdAt    DateTime   @default(now())
-}
-
-// ======================================================
-// MODELLO DI ASSOCIAZIONE TEAM–GIRONI
+// MODELLO TEAM IN GROUP (partecipazione ai gironi)
 // ======================================================
 model TeamInGroup {
   id        String   @id @default(cuid())
-  groupId   String
   teamId    String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   team      Team     @relation(fields: [teamId], references: [id])
+  groupName String
   createdAt DateTime @default(now())
 
-  @@unique([groupId, teamId])
+  @@unique([teamId, groupName])
+}
+
+// ======================================================
+// MODELLO UTENTE (per accesso admin / società / comitato)
+// ======================================================
+model User {
+  id          String     @id @default(cuid())
+  name        String
+  email       String     @unique
+  password    String
+  role        String     @default("USER") // es: SUPERADMIN / COMMITTEE / COMPANY / USER
+  committeeId String?
+  committee   Committee? @relation(fields: [committeeId], references: [id])
+  companyId   String?
+  company     Company?   @relation(fields: [companyId], references: [id])
+  createdAt   DateTime   @default(now())
 }
