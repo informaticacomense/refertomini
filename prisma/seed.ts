@@ -65,8 +65,6 @@ async function main() {
       await prisma.category.create({
         data: {
           name: cat.name,
-          shortName: cat.shortName,
-          gender: cat.gender,
           seasonId: season.id,
           committeeId: committee.id,
         },
