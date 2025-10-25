@@ -1,6 +1,6 @@
 // ======================================================
 // REFERTIMINI – powered by Informatica Comense
-// Database schema: referti-minibasket
+// Database schema completo
 // ======================================================
 
 generator client {
@@ -13,7 +13,7 @@ datasource db {
 }
 
 // ======================================================
-// ENUM – stato partita
+// ENUM – Stato partita
 // ======================================================
 enum GameStatus {
   IN_PROGRAMMA
@@ -26,7 +26,7 @@ enum GameStatus {
 // ======================================================
 model Season {
   id          String       @id @default(cuid())
-  name        String       @unique                     // es: "2024/2025"
+  name        String       @unique                     // es: "2025/2026"
   startDate   DateTime
   endDate     DateTime
   committees  Committee[]
@@ -51,11 +51,11 @@ model Committee {
   users       User[]
   createdAt   DateTime     @default(now())
 
-  @@unique([seasonId, name]) // 👈 aggiungi questa riga
+  @@unique([seasonId, name])
 }
 
 // ======================================================
-// MODELLO CATEGORIA (es. Aquilotti, Scoiattoli, Esordienti)
+// MODELLO CATEGORIA (es. Aquilotti, Esordienti, ecc.)
 // ======================================================
 model Category {
   id          String       @id @default(cuid())
@@ -65,9 +65,24 @@ model Category {
   seasonId    String
   season      Season       @relation(fields: [seasonId], references: [id])
   games       Game[]
+  groups      Group[]      // 👈 relazione 1:N con Group
   createdAt   DateTime     @default(now())
 
   @@unique([committeeId, name])
+}
+
+// ======================================================
+// MODELLO GRUPPO / GIRONI
+// ======================================================
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id])
+  teams       TeamInGroup[] // 👈 relazione 1:N con TeamInGroup
+  createdAt   DateTime      @default(now())
+
+  @@unique([categoryId, name])
 }
 
 // ======================================================
@@ -104,6 +119,20 @@ model Team {
 }
 
 // ======================================================
+// MODELLO TEAM IN GROUP (iscrizione squadre ai gironi)
+// ======================================================
+model TeamInGroup {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, groupId])
+}
+
+// ======================================================
 // MODELLO PARTITA
 // ======================================================
 model Game {
@@ -129,19 +158,6 @@ model Game {
 }
 
 // ======================================================
-// MODELLO TEAM IN GROUP (partecipazione ai gironi)
-// ======================================================
-model TeamInGroup {
-  id        String   @id @default(cuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id])
-  groupName String
-  createdAt DateTime @default(now())
-
-  @@unique([teamId, groupName])
-}
-
-// ======================================================
 // MODELLO UTENTE (per accesso admin / società / comitato)
 // ======================================================
 model User {
@@ -156,16 +172,3 @@ model User {
   company     Company?   @relation(fields: [companyId], references: [id])
   createdAt   DateTime   @default(now())
 }
-
-
-model Group {
-  id          String      @id @default(cuid())
-  name        String
-  categoryId  String
-  category    Category    @relation(fields: [categoryId], references: [id])
-  teams       TeamInGroup[]
-  createdAt   DateTime    @default(now())
-
-  @@unique([categoryId, name])
-}
-
