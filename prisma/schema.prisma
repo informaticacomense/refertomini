@@ -171,4 +171,6 @@ model User {
   companyId   String?
   company     Company?   @relation(fields: [companyId], references: [id])
   createdAt   DateTime   @default(now())
+isSuperAdmin Boolean @default(false)
+
 }
