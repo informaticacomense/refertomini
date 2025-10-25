@@ -50,6 +50,8 @@ model Committee {
   games       Game[]
   users       User[]
   createdAt   DateTime     @default(now())
+
+  @@unique([seasonId, name]) // 👈 aggiungi questa riga
 }
 
 // ======================================================
