@@ -30,7 +30,6 @@ async function main() {
   // ======================================================
   const committee = await prisma.committee.upsert({
     where: {
-      // usa la chiave composta definita nello schema
       seasonId_name: {
         seasonId: season.id,
         name: "FIP Como-Lecco",
@@ -116,10 +115,8 @@ async function main() {
   for (const name of teamNames) {
     let team = await prisma.team.findFirst({
       where: {
-        committeeId_name: {
-          committeeId: committee.id,
-          name,
-        },
+        committeeId: committee.id,
+        name,
       },
     });
 
@@ -148,13 +145,17 @@ async function main() {
   if (gironeA) {
     for (const t of teams) {
       const existing = await prisma.teamInGroup.findFirst({
-        where: { teamId: t.id, groupName: gironeA.name },
+        where: {
+          teamId: t.id,
+          groupId: gironeA.id,
+        },
       });
+
       if (!existing) {
         await prisma.teamInGroup.create({
           data: {
             teamId: t.id,
-            groupName: gironeA.name,
+            groupId: gironeA.id,
           },
         });
       }
@@ -195,4 +196,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-
