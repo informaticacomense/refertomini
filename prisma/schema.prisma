@@ -156,3 +156,16 @@ model User {
   company     Company?   @relation(fields: [companyId], references: [id])
   createdAt   DateTime   @default(now())
 }
+
+
+model Group {
+  id          String      @id @default(cuid())
+  name        String
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  teams       TeamInGroup[]
+  createdAt   DateTime    @default(now())
+
+  @@unique([categoryId, name])
+}
+
