@@ -7,7 +7,39 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const text = await res.text();
+    console.log("RISPOSTA RAW:", text);
+
+    const data = JSON.parse(text);
+
+    if (!res.ok) {
+      setError(data.error || "Errore durante il login.");
+      return;
+    }
+
+    window.location.href = "/admin";
+  } catch (err) {
+    console.error(err);
+    setError("Errore di comunicazione con il server");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
